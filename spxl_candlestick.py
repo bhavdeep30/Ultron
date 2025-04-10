@@ -55,13 +55,41 @@ def plot_candlestick(data):
     """
     Creates a candlestick chart using plotly
     """
+    # Print column names to verify data structure
+    print("\nData columns for plotting:", data.columns.tolist())
+    
+    # Check if we have the expected columns
+    required_columns = ['Open', 'High', 'Low', 'Close']
+    
+    # Map column names if they're different (sometimes yfinance returns lowercase)
+    column_map = {}
+    for col in required_columns:
+        if col in data.columns:
+            column_map[col] = col
+        elif col.lower() in data.columns:
+            column_map[col] = col.lower()
+    
+    # Check if we have all required columns
+    if len(column_map) < len(required_columns):
+        print("WARNING: Missing some required columns for candlestick chart")
+        print(f"Required: {required_columns}")
+        print(f"Available: {data.columns.tolist()}")
+        
+        # Try to use the first 4 columns as OHLC if we can't find the expected columns
+        if len(data.columns) >= 4:
+            print("Using the first 4 columns as OHLC data")
+            for i, col in enumerate(required_columns):
+                column_map[col] = data.columns[i]
+    
+    print(f"Using column mapping: {column_map}")
+    
     # Create the candlestick chart
     fig = go.Figure(data=[go.Candlestick(
         x=data.index,
-        open=data['Open'],
-        high=data['High'],
-        low=data['Low'],
-        close=data['Close'],
+        open=data[column_map.get('Open', data.columns[0])],
+        high=data[column_map.get('High', data.columns[1])],
+        low=data[column_map.get('Low', data.columns[2])],
+        close=data[column_map.get('Close', data.columns[3])],
         name='SPXL'
     )])
     
@@ -86,8 +114,14 @@ def main():
     
     # Print the full data to console for debugging
     print("\nFull data shape:", data.shape)
-    print("\nAll data:")
-    print(data)
+    print("\nData types:")
+    print(data.dtypes)
+    print("\nFirst few rows:")
+    print(data.head())
+    
+    # Check if we have any NaN values
+    print("\nNaN values in each column:")
+    print(data.isna().sum())
     
     # Filter to just the most recent trading day with data
     if not data.empty:
