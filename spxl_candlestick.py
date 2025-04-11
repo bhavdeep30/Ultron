@@ -42,7 +42,7 @@ trades = []
 current_position = None
 
 # Implement the trading strategy
-for i in range(6, len(df)-1):  # Start after 6MA is available, leave room for next candle
+for i in range(6, len(df)):  # Start after 6MA is available
     # If not in a position and we have a red candle that closes above 6MA
     if (not df['In_Position'].iloc[i] and 
         df['Red_Candle'].iloc[i] and 
@@ -56,34 +56,33 @@ for i in range(6, len(df)-1):  # Start after 6MA is available, leave room for ne
         entry_price = df['Close'].iloc[i]
         entry_time = df.index[i]
         current_position = {'entry_time': entry_time, 'entry_price': entry_price}
-    
-    # If in a position and at the next candle
-    elif df['In_Position'].iloc[i-1] and not df['In_Position'].iloc[i]:
-        # Sell signal at the close of the next candle
-        df.loc[df.index[i], 'Sell_Signal'] = True
         
-        # Record the sell and calculate profit
-        exit_price = df['Close'].iloc[i]
-        exit_time = df.index[i]
-        
-        if current_position:
-            profit = exit_price - current_position['entry_price']
-            profit_pct = (profit / current_position['entry_price']) * 100
+        # If this is not the last candle, sell at the next candle
+        if i + 1 < len(df):
+            # Sell at the next candle
+            df.loc[df.index[i+1], 'Sell_Signal'] = True
+            
+            # Record the sell and calculate profit
+            exit_price = df['Close'].iloc[i+1]
+            exit_time = df.index[i+1]
+            
+            profit = exit_price - entry_price
+            profit_pct = (profit / entry_price) * 100
             
             trades.append({
-                'entry_time': current_position['entry_time'],
-                'entry_price': current_position['entry_price'],
+                'entry_time': entry_time,
+                'entry_price': entry_price,
                 'exit_time': exit_time,
                 'exit_price': exit_price,
                 'profit': profit,
                 'profit_pct': profit_pct
             })
             
+            # Reset position after selling
             current_position = None
-
-    # Update position status for the next candle if we're in a position
-    if i < len(df)-1 and df['In_Position'].iloc[i]:
-        df.loc[df.index[i+1], 'In_Position'] = True
+        else:
+            # If this is the last candle, we can't sell
+            print("Warning: Buy signal on the last candle - no sell possible")
 
 # Create a DataFrame for trades
 trades_df = pd.DataFrame(trades)
@@ -94,16 +93,18 @@ if trades:
     total_profit = sum(trade['profit'] for trade in trades)
     total_profit_pct = sum(trade['profit_pct'] for trade in trades)
 
-# Create arrays for buy/sell markers
-buy_signals = np.where(df['Buy_Signal'], df['Close'], np.nan)
-sell_signals = np.where(df['Sell_Signal'], df['Close'], np.nan)
+# Create addplots with the 6MA
+ap = [mpf.make_addplot(df['6MA'], color='blue', width=1.2)]
 
-# Create addplots
-ap = [
-    mpf.make_addplot(df['6MA'], color='blue', width=1.2),
-    mpf.make_addplot(buy_signals, type='scatter', marker='^', markersize=100, color='g'),
-    mpf.make_addplot(sell_signals, type='scatter', marker='v', markersize=100, color='r')
-]
+# Only add buy signals if there are any
+if df['Buy_Signal'].any():
+    buy_signals = np.where(df['Buy_Signal'], df['Close'], np.nan)
+    ap.append(mpf.make_addplot(buy_signals, type='scatter', marker='^', markersize=100, color='g'))
+
+# Only add sell signals if there are any
+if df['Sell_Signal'].any():
+    sell_signals = np.where(df['Sell_Signal'], df['Close'], np.nan)
+    ap.append(mpf.make_addplot(sell_signals, type='scatter', marker='v', markersize=100, color='r'))
 
 # Create the figure and primary axis
 fig, axes = mpf.plot(
@@ -166,6 +167,9 @@ if trades:
     # Count winning and losing trades
     winning_trades = sum(1 for trade in trades if trade['profit'] > 0)
     print(f"Win rate: {winning_trades/len(trades)*100:.2f}% ({winning_trades}/{len(trades)})")
+else:
+    print("No trades were executed based on the strategy criteria.")
+    print("This could be because no red candles closed above the 6MA.")
 
 plt.tight_layout()
 plt.show()
