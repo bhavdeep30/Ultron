@@ -8,7 +8,8 @@ from matplotlib.widgets import RadioButtons, Button
 import datetime
 import sys
 import matplotlib
-matplotlib.use('TkAgg')  # Use TkAgg backend for better interactive support
+# Use Qt5Agg backend which is more stable for interactive plots
+matplotlib.use('Qt5Agg')  
 
 TICKER = "SPXL"
 
@@ -283,24 +284,26 @@ class InteractivePlotter:
     def show(self):
         """Display the interactive plot"""
         self.update_plot()
-        plt.show(block=True)  # Block execution until window is closed
+        
+        # Create a more robust way to keep the plot window open
+        try:
+            plt.show()
+        except Exception as e:
+            print(f"Error in plot display: {e}")
 
 # Create and show the interactive plotter
 if __name__ == "__main__":
     # Keep a reference to the plotter to prevent garbage collection
     plotter = InteractivePlotter()
     
-    # Set up a figure manager to handle window close events
-    def on_close(event):
-        print("Plot window closed. Exiting...")
-        sys.exit(0)
-        
-    plt.gcf().canvas.mpl_connect('close_event', on_close)
-    
     try:
+        # This is a safer way to show the plot and handle window closing
         plotter.show()
     except KeyboardInterrupt:
         print("Interrupted by user. Exiting...")
-        sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        print("Exiting...")
 
 # This section has been moved into the InteractivePlotter class
