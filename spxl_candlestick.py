@@ -4,11 +4,60 @@ import yfinance as yf
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.table import Table
+import datetime
+import sys
 
 TICKER = "SPXL"
 
-# Download 5-minute interval data for latest trading day
-df = yf.download(TICKER, period="2d", interval="5m", auto_adjust=False, group_by='ticker')
+def get_available_dates(days=7):
+    """Get a list of available trading dates for the past n days"""
+    # Get data for the past n+5 days (to account for weekends and holidays)
+    end_date = datetime.datetime.now()
+    start_date = end_date - datetime.timedelta(days=days+5)
+    
+    # Download daily data to get available trading days
+    daily_data = yf.download(TICKER, start=start_date, end=end_date, interval="1d")
+    
+    # Get the last n trading days
+    available_dates = daily_data.index[-days:].strftime('%Y-%m-%d').tolist()
+    return available_dates
+
+def select_date():
+    """Allow user to select a trading date"""
+    available_dates = get_available_dates(7)
+    
+    print("\nAvailable trading dates for the past 7 trading days:")
+    for i, date in enumerate(available_dates):
+        print(f"{i+1}. {date}")
+    
+    while True:
+        try:
+            choice = input("\nSelect a date (1-7) or press Enter for the latest trading day: ")
+            if choice == "":
+                # Default to the latest trading day
+                selected_date = available_dates[-1]
+                break
+            
+            choice = int(choice)
+            if 1 <= choice <= len(available_dates):
+                selected_date = available_dates[choice-1]
+                break
+            else:
+                print(f"Please enter a number between 1 and {len(available_dates)}")
+        except ValueError:
+            print("Please enter a valid number")
+    
+    return selected_date
+
+# Get user selected date
+selected_date = select_date()
+print(f"Analyzing {TICKER} for {selected_date}")
+
+# Download 5-minute interval data for the selected trading day
+# Use a 2-day period to ensure we get the full trading day
+start_date = pd.to_datetime(selected_date)
+end_date = start_date + datetime.timedelta(days=1)
+df = yf.download(TICKER, start=start_date, end=end_date, interval="5m", auto_adjust=False, group_by='ticker')
 
 # Fix column names
 df = df[TICKER].copy()
@@ -114,7 +163,7 @@ fig, axes = mpf.plot(
     type='candle',
     volume=True,
     style='yahoo',
-    title=f'{TICKER} - 5 Minute Candlestick Chart with Trading Strategy',
+    title=f'{TICKER} - 5 Minute Candlestick Chart for {selected_date}',
     ylabel='Price ($)',
     ylabel_lower='Volume',
     figratio=(12, 8),
@@ -161,7 +210,7 @@ if trades:
     table_ax.add_table(table)
 
 # Print trade summary
-print(f"\nTrading Summary for {TICKER}:")
+print(f"\nTrading Summary for {TICKER} on {selected_date}:")
 print(f"Number of trades: {len(trades)}")
 if trades:
     print(f"Total profit: ${total_profit:.2f} ({total_profit_pct:.2f}%)")
