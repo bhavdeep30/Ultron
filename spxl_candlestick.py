@@ -94,16 +94,20 @@ if trades:
     total_profit = sum(trade['profit'] for trade in trades)
     total_profit_pct = sum(trade['profit_pct'] for trade in trades)
 
-# Create buy and sell markers for the plot
-buy_markers = df[df['Buy_Signal']]['Close']
-sell_markers = df[df['Sell_Signal']]['Close']
-
 # Create addplots
-ap = [
-    mpf.make_addplot(df['6MA'], color='blue', width=1.2),
-    mpf.make_addplot(buy_markers, type='scatter', markersize=100, marker='^', color='g'),
-    mpf.make_addplot(sell_markers, type='scatter', markersize=100, marker='v', color='r')
-]
+ap = [mpf.make_addplot(df['6MA'], color='blue', width=1.2)]
+
+# Add buy markers only if there are any
+if df['Buy_Signal'].any():
+    ap.append(mpf.make_addplot(df['Close'], type='scatter', 
+                              marker='^', markersize=100, color='g',
+                              scatter_indices=df.index[df['Buy_Signal']]))
+
+# Add sell markers only if there are any
+if df['Sell_Signal'].any():
+    ap.append(mpf.make_addplot(df['Close'], type='scatter', 
+                              marker='v', markersize=100, color='r',
+                              scatter_indices=df.index[df['Sell_Signal']]))
 
 # Create the figure and primary axis
 fig, axes = mpf.plot(
