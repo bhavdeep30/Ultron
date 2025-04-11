@@ -120,7 +120,8 @@ fig, axes = mpf.plot(
     figratio=(12, 8),
     figscale=1.2,
     addplot=ap,
-    returnfig=True
+    returnfig=True,
+    tight_layout=False  # Disable tight_layout to avoid warning
 )
 
 # Add a table below the chart
@@ -173,5 +174,6 @@ else:
     print("No trades were executed based on the strategy criteria.")
     print("This could be because no red candles closed above the 6MA.")
 
-plt.tight_layout()
+# Use figure-level adjustments instead of tight_layout
+plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.25)
 plt.show()
