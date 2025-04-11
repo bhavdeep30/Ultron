@@ -8,8 +8,8 @@ from matplotlib.widgets import RadioButtons, Button
 import datetime
 import sys
 import matplotlib
-# Use Qt5Agg backend which is more stable for interactive plots
-matplotlib.use('Qt5Agg')  
+# Use TkAgg backend which is more widely compatible
+matplotlib.use('TkAgg')
 
 TICKER = "SPXL"
 
@@ -48,8 +48,10 @@ class InteractivePlotter:
         
     def update_plot(self, event=None):
         """Update the plot with the currently selected date"""
+        # Store the current figure manager to properly close it
         if self.fig is not None:
             plt.close(self.fig)
+            plt.clf()  # Clear the current figure
         
         print(f"Analyzing {TICKER} for {self.selected_date}")
         
@@ -285,9 +287,11 @@ class InteractivePlotter:
         """Display the interactive plot"""
         self.update_plot()
         
-        # Create a more robust way to keep the plot window open
+        # Keep the plot window open and handle window close properly
         try:
-            plt.show()
+            # This is a more reliable way to keep the plot window open
+            plt.ioff()  # Turn off interactive mode
+            plt.show(block=True)  # Block until window is closed
         except Exception as e:
             print(f"Error in plot display: {e}")
 
@@ -296,14 +300,20 @@ if __name__ == "__main__":
     # Keep a reference to the plotter to prevent garbage collection
     plotter = InteractivePlotter()
     
+    # Set up a simple event handler for window close
+    def handle_close(evt):
+        print("Plot window closed")
+    
+    # Connect the event handler
+    plt.gcf().canvas.mpl_connect('close_event', handle_close)
+    
     try:
-        # This is a safer way to show the plot and handle window closing
+        # Show the plot
         plotter.show()
     except KeyboardInterrupt:
-        print("Interrupted by user. Exiting...")
+        print("Interrupted by user")
     except Exception as e:
         print(f"Error: {e}")
-    finally:
-        print("Exiting...")
+    print("Exiting...")
 
 # This section has been moved into the InteractivePlotter class
