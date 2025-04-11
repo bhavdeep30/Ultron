@@ -8,7 +8,7 @@ from matplotlib.table import Table
 TICKER = "SPXL"
 
 # Download 5-minute interval data for latest trading day
-df = yf.download(TICKER, period="1d", interval="5m", auto_adjust=False, group_by='ticker')
+df = yf.download(TICKER, period="2d", interval="5m", auto_adjust=False, group_by='ticker')
 
 # Fix column names
 df = df[TICKER].copy()
