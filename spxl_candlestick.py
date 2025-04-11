@@ -1,15 +1,13 @@
-import mplfinance as mpf
 import pandas as pd
 import yfinance as yf
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.table import Table
-from matplotlib.widgets import RadioButtons, Button
 import datetime
 import sys
-import matplotlib
-# Use TkAgg backend which is more widely compatible
-matplotlib.use('TkAgg')
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
 
 TICKER = "SPXL"
 
@@ -26,33 +24,19 @@ def get_available_dates(days=7):
     available_dates = daily_data.index[-days:].strftime('%Y-%m-%d').tolist()
     return available_dates
 
-class InteractivePlotter:
+class DashPlotter:
     def __init__(self, days=7):
         self.days = days
         self.available_dates = get_available_dates(days)
         self.selected_date = self.available_dates[-1]  # Default to latest date
-        self.fig = None
-        self.axes = None
-        self.table_ax = None
-        self.main_ax = None
         self.trades = []
         self.df = None
         
-    def load_more_dates(self, days=None):
-        """Load more historical dates"""
-        if days is None:
-            days = self.days * 2  # Double the number of days
-        self.days = days
-        self.available_dates = get_available_dates(days)
-        self.update_plot()
-        
-    def update_plot(self, event=None):
-        """Update the plot with the currently selected date"""
-        # Store the current figure manager to properly close it
-        if self.fig is not None:
-            plt.close(self.fig)
-            plt.clf()  # Clear the current figure
-        
+    def analyze_data(self, date_str=None):
+        """Analyze data for the given date"""
+        if date_str is not None:
+            self.selected_date = date_str
+            
         print(f"Analyzing {TICKER} for {self.selected_date}")
         
         # Download 5-minute interval data for the selected trading day
@@ -64,28 +48,7 @@ class InteractivePlotter:
         # Check if we got any data
         if self.df.empty:
             print(f"No data available for {TICKER} on {self.selected_date}")
-            # Create a simple figure with a message
-            self.fig, ax = plt.subplots(figsize=(12, 8))
-            ax.text(0.5, 0.5, f"No data available for {TICKER} on {self.selected_date}", 
-                    horizontalalignment='center', verticalalignment='center', fontsize=14)
-            ax.axis('off')
-            
-            # Add date selection radio buttons
-            radio_ax = self.fig.add_axes([0.01, 0.5, 0.1, 0.3])
-            self.radio = RadioButtons(radio_ax, self.available_dates)
-            active_idx = self.available_dates.index(self.selected_date) if self.selected_date in self.available_dates else -1
-            if active_idx >= 0:
-                self.radio.set_active(active_idx)
-            self.radio.on_clicked(self.select_date)
-            
-            # Add refresh button
-            refresh_ax = self.fig.add_axes([0.01, 0.4, 0.1, 0.05])
-            self.refresh_button = Button(refresh_ax, 'Refresh')
-            self.refresh_button.on_clicked(self.update_plot)
-            
-            plt.subplots_adjust(left=0.15, right=0.9, top=0.9, bottom=0.25)
-            plt.draw()
-            return
+            return None
         
         # Fix column names
         self.df = self.df[TICKER].copy()
@@ -163,87 +126,12 @@ class InteractivePlotter:
                     # If this is the last candle, we can't sell
                     print("Warning: Buy signal on the last candle - no sell possible")
         
-        # Create a DataFrame for trades
-        trades_df = pd.DataFrame(self.trades)
-        
-        # Calculate total return
-        total_profit = 0
-        total_profit_pct = 0
-        if self.trades:
-            total_profit = sum(trade['profit'] for trade in self.trades)
-            total_profit_pct = sum(trade['profit_pct'] for trade in self.trades)
-        
-        # Create addplots with the 6MA
-        ap = [mpf.make_addplot(self.df['6MA'], color='blue', width=1.2)]
-        
-        # Only add buy signals if there are any
-        if self.df['Buy_Signal'].any():
-            buy_signals = np.where(self.df['Buy_Signal'], self.df['Close'], np.nan)
-            ap.append(mpf.make_addplot(buy_signals, type='scatter', marker='^', markersize=100, color='g'))
-        
-        # Only add sell signals if there are any
-        if self.df['Sell_Signal'].any():
-            sell_signals = np.where(self.df['Sell_Signal'], self.df['Close'], np.nan)
-            ap.append(mpf.make_addplot(sell_signals, type='scatter', marker='v', markersize=100, color='r'))
-        
-        # Create the figure and primary axis
-        self.fig, self.axes = mpf.plot(
-            self.df,
-            type='candle',
-            volume=True,
-            style='yahoo',
-            title=f'{TICKER} - 5 Minute Candlestick Chart for {self.selected_date}',
-            ylabel='Price ($)',
-            ylabel_lower='Volume',
-            figratio=(12, 8),
-            figscale=1.2,
-            addplot=ap,
-            returnfig=True,
-            tight_layout=False  # Disable tight_layout to avoid warning
-        )
-        
-        self.main_ax = self.axes[0]
-        
-        # Add a table below the chart
-        if self.trades:
-            # Format the trades table data
-            table_data = []
-            for i, trade in enumerate(self.trades):
-                table_data.append([
-                    f"{trade['entry_time'].strftime('%H:%M')} → {trade['exit_time'].strftime('%H:%M')}",
-                    f"${trade['entry_price']:.2f} → ${trade['exit_price']:.2f}",
-                    f"${trade['profit']:.2f}",
-                    f"{trade['profit_pct']:.2f}%"
-                ])
-            
-            # Add a row for total profit
-            table_data.append(["TOTAL", "", f"${total_profit:.2f}", f"{total_profit_pct:.2f}%"])
-            
-            # Create a new axis for the table
-            self.fig.set_size_inches(12, 10)  # Make figure taller to accommodate table
-            self.table_ax = self.fig.add_axes([0.1, 0.05, 0.8, 0.2])  # [left, bottom, width, height]
-            self.table_ax.axis('off')
-            
-            # Create the table
-            table = Table(self.table_ax, bbox=[0, 0, 1, 1])
-            
-            # Add column headers
-            headers = ['Time', 'Price', 'Profit ($)', 'Profit (%)']
-            for i, header in enumerate(headers):
-                table.add_cell(0, i, 0.2, 0.1, text=header, loc='center', facecolor='lightgrey')
-            
-            # Add data rows
-            for i, row in enumerate(table_data):
-                row_color = 'white' if i < len(self.trades) else 'lightgrey'
-                for j, cell in enumerate(row):
-                    table.add_cell(i+1, j, 0.2, 0.1, text=cell, loc='center', facecolor=row_color)
-            
-            self.table_ax.add_table(table)
-        
         # Print trade summary
         print(f"\nTrading Summary for {TICKER} on {self.selected_date}:")
         print(f"Number of trades: {len(self.trades)}")
         if self.trades:
+            total_profit = sum(trade['profit'] for trade in self.trades)
+            total_profit_pct = sum(trade['profit_pct'] for trade in self.trades)
             print(f"Total profit: ${total_profit:.2f} ({total_profit_pct:.2f}%)")
             print(f"Average profit per trade: ${total_profit/len(self.trades):.2f} ({total_profit_pct/len(self.trades):.2f}%)")
             
@@ -253,67 +141,300 @@ class InteractivePlotter:
         else:
             print("No trades were executed based on the strategy criteria.")
             print("This could be because no red candles closed above the 6MA.")
-        
-        # Add date selection radio buttons
-        radio_ax = self.fig.add_axes([0.01, 0.5, 0.1, 0.3])
-        self.radio = RadioButtons(radio_ax, self.available_dates)
-        # Set the active radio button to match the current selected date
-        active_idx = self.available_dates.index(self.selected_date) if self.selected_date in self.available_dates else -1
-        if active_idx >= 0:
-            self.radio.set_active(active_idx)
-        self.radio.on_clicked(self.select_date)
-        
-        # Add refresh button
-        refresh_ax = self.fig.add_axes([0.01, 0.4, 0.1, 0.05])
-        self.refresh_button = Button(refresh_ax, 'Refresh')
-        self.refresh_button.on_clicked(self.update_plot)
-        
-        # Add load more dates button
-        more_dates_ax = self.fig.add_axes([0.01, 0.35, 0.1, 0.05])
-        self.more_dates_button = Button(more_dates_ax, 'More Dates')
-        self.more_dates_button.on_clicked(lambda event: self.load_more_dates())
-        
-        # Use figure-level adjustments instead of tight_layout
-        plt.subplots_adjust(left=0.15, right=0.9, top=0.9, bottom=0.25)
-        plt.draw()
+            
+        return self.df
     
-    def select_date(self, date_str):
-        """Handle date selection from radio buttons"""
-        self.selected_date = date_str
-        print(f"Selected date: {date_str}")
-        self.update_plot()
-    
-    def show(self):
-        """Display the interactive plot"""
-        self.update_plot()
+    def create_figure(self):
+        """Create a plotly figure with the analyzed data"""
+        if self.df is None or self.df.empty:
+            # Return an empty figure with a message
+            fig = go.Figure()
+            fig.add_annotation(
+                text=f"No data available for {TICKER} on {self.selected_date}",
+                xref="paper", yref="paper",
+                x=0.5, y=0.5, showarrow=False,
+                font=dict(size=20)
+            )
+            return fig
+            
+        # Create a subplot with 2 rows (price and volume)
+        fig = make_subplots(
+            rows=2, cols=1, 
+            shared_xaxes=True,
+            vertical_spacing=0.03,
+            subplot_titles=(f'{TICKER} - 5 Minute Candlestick Chart for {self.selected_date}', ''),
+            row_heights=[0.7, 0.3]
+        )
         
-        # Keep the plot window open and handle window close properly
-        try:
-            # This is a more reliable way to keep the plot window open
-            plt.ioff()  # Turn off interactive mode
-            plt.show(block=True)  # Block until window is closed
-        except Exception as e:
-            print(f"Error in plot display: {e}")
+        # Add candlestick chart
+        fig.add_trace(
+            go.Candlestick(
+                x=self.df.index,
+                open=self.df['Open'],
+                high=self.df['High'],
+                low=self.df['Low'],
+                close=self.df['Close'],
+                name='Price'
+            ),
+            row=1, col=1
+        )
+        
+        # Add 6MA line
+        fig.add_trace(
+            go.Scatter(
+                x=self.df.index,
+                y=self.df['6MA'],
+                line=dict(color='blue', width=2),
+                name='6MA'
+            ),
+            row=1, col=1
+        )
+        
+        # Add buy signals
+        if self.df['Buy_Signal'].any():
+            buy_indices = self.df[self.df['Buy_Signal']].index
+            buy_prices = self.df.loc[buy_indices, 'Close']
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=buy_indices,
+                    y=buy_prices,
+                    mode='markers',
+                    marker=dict(
+                        symbol='triangle-up',
+                        size=15,
+                        color='green',
+                        line=dict(width=2, color='darkgreen')
+                    ),
+                    name='Buy Signal'
+                ),
+                row=1, col=1
+            )
+        
+        # Add sell signals
+        if self.df['Sell_Signal'].any():
+            sell_indices = self.df[self.df['Sell_Signal']].index
+            sell_prices = self.df.loc[sell_indices, 'Close']
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=sell_indices,
+                    y=sell_prices,
+                    mode='markers',
+                    marker=dict(
+                        symbol='triangle-down',
+                        size=15,
+                        color='red',
+                        line=dict(width=2, color='darkred')
+                    ),
+                    name='Sell Signal'
+                ),
+                row=1, col=1
+            )
+        
+        # Add volume bar chart
+        fig.add_trace(
+            go.Bar(
+                x=self.df.index,
+                y=self.df['Volume'],
+                name='Volume',
+                marker=dict(
+                    color='rgba(0, 0, 255, 0.5)'
+                )
+            ),
+            row=2, col=1
+        )
+        
+        # Update layout
+        fig.update_layout(
+            title=f'{TICKER} - 5 Minute Candlestick Chart for {self.selected_date}',
+            xaxis_title='Time',
+            yaxis_title='Price ($)',
+            height=800,
+            xaxis_rangeslider_visible=False,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
+        
+        # Update y-axis labels
+        fig.update_yaxes(title_text="Price ($)", row=1, col=1)
+        fig.update_yaxes(title_text="Volume", row=2, col=1)
+        
+        return fig
+    
+    def create_trades_table(self):
+        """Create an HTML table with trade information"""
+        if not self.trades:
+            return html.Div("No trades executed on this date")
+        
+        # Calculate total profit
+        total_profit = sum(trade['profit'] for trade in self.trades)
+        total_profit_pct = sum(trade['profit_pct'] for trade in self.trades)
+        
+        # Create table header
+        header = html.Tr([
+            html.Th("Time"),
+            html.Th("Price"),
+            html.Th("Profit ($)"),
+            html.Th("Profit (%)")
+        ])
+        
+        # Create table rows for each trade
+        rows = []
+        for trade in self.trades:
+            row = html.Tr([
+                html.Td(f"{trade['entry_time'].strftime('%H:%M')} → {trade['exit_time'].strftime('%H:%M')}"),
+                html.Td(f"${trade['entry_price']:.2f} → ${trade['exit_price']:.2f}"),
+                html.Td(f"${trade['profit']:.2f}", style={'color': 'green' if trade['profit'] > 0 else 'red'}),
+                html.Td(f"{trade['profit_pct']:.2f}%", style={'color': 'green' if trade['profit_pct'] > 0 else 'red'})
+            ])
+            rows.append(row)
+        
+        # Add total row
+        total_row = html.Tr([
+            html.Td("TOTAL", style={'font-weight': 'bold'}),
+            html.Td(""),
+            html.Td(f"${total_profit:.2f}", style={'font-weight': 'bold', 'color': 'green' if total_profit > 0 else 'red'}),
+            html.Td(f"{total_profit_pct:.2f}%", style={'font-weight': 'bold', 'color': 'green' if total_profit_pct > 0 else 'red'})
+        ])
+        
+        # Create the table
+        table = html.Table(
+            [header] + rows + [total_row],
+            style={
+                'width': '100%',
+                'border-collapse': 'collapse',
+                'margin-top': '20px',
+                'margin-bottom': '20px'
+            }
+        )
+        
+        return table
+    
+    def create_summary_stats(self):
+        """Create a summary statistics component"""
+        if not self.trades:
+            return html.Div("No trades executed on this date")
+        
+        total_profit = sum(trade['profit'] for trade in self.trades)
+        total_profit_pct = sum(trade['profit_pct'] for trade in self.trades)
+        avg_profit = total_profit / len(self.trades)
+        avg_profit_pct = total_profit_pct / len(self.trades)
+        winning_trades = sum(1 for trade in self.trades if trade['profit'] > 0)
+        win_rate = (winning_trades / len(self.trades)) * 100
+        
+        return html.Div([
+            html.H4(f"Trading Summary for {TICKER} on {self.selected_date}"),
+            html.Ul([
+                html.Li(f"Number of trades: {len(self.trades)}"),
+                html.Li([
+                    "Total profit: ",
+                    html.Span(f"${total_profit:.2f} ({total_profit_pct:.2f}%)", 
+                              style={'color': 'green' if total_profit > 0 else 'red'})
+                ]),
+                html.Li([
+                    "Average profit per trade: ",
+                    html.Span(f"${avg_profit:.2f} ({avg_profit_pct:.2f}%)",
+                              style={'color': 'green' if avg_profit > 0 else 'red'})
+                ]),
+                html.Li(f"Win rate: {win_rate:.2f}% ({winning_trades}/{len(self.trades)})")
+            ])
+        ])
+    
+    def load_more_dates(self, days=None):
+        """Load more historical dates"""
+        if days is None:
+            days = self.days * 2  # Double the number of days
+        self.days = days
+        self.available_dates = get_available_dates(days)
+        return self.available_dates
 
-# Create and show the interactive plotter
+# Create the Dash app
+def create_dash_app():
+    # Initialize the plotter
+    plotter = DashPlotter()
+    
+    # Analyze data for the default date
+    plotter.analyze_data()
+    
+    # Create the Dash app
+    app = dash.Dash(__name__)
+    
+    # Define the app layout
+    app.layout = html.Div([
+        html.H1(f"{TICKER} Candlestick Analysis", style={'textAlign': 'center'}),
+        
+        # Date selection dropdown
+        html.Div([
+            html.Label("Select Date:"),
+            dcc.Dropdown(
+                id='date-dropdown',
+                options=[{'label': date, 'value': date} for date in plotter.available_dates],
+                value=plotter.selected_date,
+                style={'width': '200px'}
+            ),
+            html.Button('Refresh Data', id='refresh-button', n_clicks=0, 
+                       style={'marginLeft': '10px'}),
+            html.Button('Load More Dates', id='more-dates-button', n_clicks=0,
+                       style={'marginLeft': '10px'})
+        ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '20px'}),
+        
+        # Candlestick chart
+        dcc.Graph(id='candlestick-chart', figure=plotter.create_figure()),
+        
+        # Trade summary and statistics
+        html.Div([
+            html.Div(id='trade-summary', children=plotter.create_summary_stats()),
+            html.Div(id='trade-table', children=plotter.create_trades_table())
+        ])
+    ])
+    
+    # Define callback for date selection
+    @app.callback(
+        [Output('candlestick-chart', 'figure'),
+         Output('trade-summary', 'children'),
+         Output('trade-table', 'children')],
+        [Input('date-dropdown', 'value'),
+         Input('refresh-button', 'n_clicks')]
+    )
+    def update_chart(selected_date, n_clicks):
+        # Analyze data for the selected date
+        plotter.analyze_data(selected_date)
+        
+        # Create the figure and trade information
+        fig = plotter.create_figure()
+        summary = plotter.create_summary_stats()
+        table = plotter.create_trades_table()
+        
+        return fig, summary, table
+    
+    # Define callback for loading more dates
+    @app.callback(
+        Output('date-dropdown', 'options'),
+        [Input('more-dates-button', 'n_clicks')],
+        [State('date-dropdown', 'value')]
+    )
+    def load_more_dates(n_clicks, current_value):
+        if n_clicks > 0:
+            # Load more dates
+            plotter.load_more_dates()
+            
+            # Update dropdown options
+            return [{'label': date, 'value': date} for date in plotter.available_dates]
+        
+        # Return current options if button not clicked
+        return [{'label': date, 'value': date} for date in plotter.available_dates]
+    
+    return app
+
+# Run the app
 if __name__ == "__main__":
-    # Keep a reference to the plotter to prevent garbage collection
-    plotter = InteractivePlotter()
-    
-    # Set up a simple event handler for window close
-    def handle_close(evt):
-        print("Plot window closed")
-    
-    # Connect the event handler
-    plt.gcf().canvas.mpl_connect('close_event', handle_close)
-    
-    try:
-        # Show the plot
-        plotter.show()
-    except KeyboardInterrupt:
-        print("Interrupted by user")
-    except Exception as e:
-        print(f"Error: {e}")
-    print("Exiting...")
-
-# This section has been moved into the InteractivePlotter class
+    app = create_dash_app()
+    print(f"Starting Dash server for {TICKER} candlestick analysis...")
+    print("Open your web browser and navigate to http://127.0.0.1:8050/")
+    app.run_server(debug=True, use_reloader=False)
