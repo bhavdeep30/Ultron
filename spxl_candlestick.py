@@ -24,8 +24,9 @@ def get_available_dates(days=7):
     return available_dates
 
 class InteractivePlotter:
-    def __init__(self):
-        self.available_dates = get_available_dates(7)
+    def __init__(self, days=7):
+        self.days = days
+        self.available_dates = get_available_dates(days)
         self.selected_date = self.available_dates[-1]  # Default to latest date
         self.fig = None
         self.axes = None
@@ -34,9 +35,18 @@ class InteractivePlotter:
         self.trades = []
         self.df = None
         
+    def load_more_dates(self, days=None):
+        """Load more historical dates"""
+        if days is None:
+            days = self.days * 2  # Double the number of days
+        self.days = days
+        self.available_dates = get_available_dates(days)
+        self.update_plot()
+        
     def update_plot(self, event=None):
         """Update the plot with the currently selected date"""
-        plt.clf()
+        if self.fig is not None:
+            plt.close(self.fig)
         
         print(f"Analyzing {TICKER} for {self.selected_date}")
         
@@ -45,6 +55,32 @@ class InteractivePlotter:
         start_date = pd.to_datetime(self.selected_date)
         end_date = start_date + datetime.timedelta(days=1)
         self.df = yf.download(TICKER, start=start_date, end=end_date, interval="5m", auto_adjust=False, group_by='ticker')
+        
+        # Check if we got any data
+        if self.df.empty:
+            print(f"No data available for {TICKER} on {self.selected_date}")
+            # Create a simple figure with a message
+            self.fig, ax = plt.subplots(figsize=(12, 8))
+            ax.text(0.5, 0.5, f"No data available for {TICKER} on {self.selected_date}", 
+                    horizontalalignment='center', verticalalignment='center', fontsize=14)
+            ax.axis('off')
+            
+            # Add date selection radio buttons
+            radio_ax = self.fig.add_axes([0.01, 0.5, 0.1, 0.3])
+            self.radio = RadioButtons(radio_ax, self.available_dates)
+            active_idx = self.available_dates.index(self.selected_date) if self.selected_date in self.available_dates else -1
+            if active_idx >= 0:
+                self.radio.set_active(active_idx)
+            self.radio.on_clicked(self.select_date)
+            
+            # Add refresh button
+            refresh_ax = self.fig.add_axes([0.01, 0.4, 0.1, 0.05])
+            self.refresh_button = Button(refresh_ax, 'Refresh')
+            self.refresh_button.on_clicked(self.update_plot)
+            
+            plt.subplots_adjust(left=0.15, right=0.9, top=0.9, bottom=0.25)
+            plt.draw()
+            return
         
         # Fix column names
         self.df = self.df[TICKER].copy()
@@ -216,12 +252,21 @@ class InteractivePlotter:
         # Add date selection radio buttons
         radio_ax = self.fig.add_axes([0.01, 0.5, 0.1, 0.3])
         self.radio = RadioButtons(radio_ax, self.available_dates)
+        # Set the active radio button to match the current selected date
+        active_idx = self.available_dates.index(self.selected_date) if self.selected_date in self.available_dates else -1
+        if active_idx >= 0:
+            self.radio.set_active(active_idx)
         self.radio.on_clicked(self.select_date)
         
         # Add refresh button
         refresh_ax = self.fig.add_axes([0.01, 0.4, 0.1, 0.05])
         self.refresh_button = Button(refresh_ax, 'Refresh')
         self.refresh_button.on_clicked(self.update_plot)
+        
+        # Add load more dates button
+        more_dates_ax = self.fig.add_axes([0.01, 0.35, 0.1, 0.05])
+        self.more_dates_button = Button(more_dates_ax, 'More Dates')
+        self.more_dates_button.on_clicked(lambda event: self.load_more_dates())
         
         # Use figure-level adjustments instead of tight_layout
         plt.subplots_adjust(left=0.15, right=0.9, top=0.9, bottom=0.25)
@@ -230,6 +275,7 @@ class InteractivePlotter:
     def select_date(self, date_str):
         """Handle date selection from radio buttons"""
         self.selected_date = date_str
+        print(f"Selected date: {date_str}")
         self.update_plot()
     
     def show(self):
@@ -238,7 +284,8 @@ class InteractivePlotter:
         plt.show()
 
 # Create and show the interactive plotter
-plotter = InteractivePlotter()
-plotter.show()
+if __name__ == "__main__":
+    plotter = InteractivePlotter()
+    plotter.show()
 
 # This section has been moved into the InteractivePlotter class
