@@ -437,4 +437,4 @@ if __name__ == "__main__":
     app = create_dash_app()
     print(f"Starting Dash server for {TICKER} candlestick analysis...")
     print("Open your web browser and navigate to http://127.0.0.1:8050/")
-    app.run_server(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False)
