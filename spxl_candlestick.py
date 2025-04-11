@@ -44,9 +44,11 @@ current_position = None
 # Implement the trading strategy
 for i in range(6, len(df)):  # Start after 6MA is available
     # If not in a position and we have a red candle that closes above 6MA
+    # Also check that we're not selling on this candle (which would happen if previous candle had a buy)
     if (not df['In_Position'].iloc[i] and 
         df['Red_Candle'].iloc[i] and 
-        df['Close'].iloc[i] > df['6MA'].iloc[i]):
+        df['Close'].iloc[i] > df['6MA'].iloc[i] and
+        not df['Sell_Signal'].iloc[i]):
         
         # Buy signal
         df.loc[df.index[i], 'Buy_Signal'] = True
