@@ -891,15 +891,22 @@ def create_dash_app():
                             'padding': '15px',
                             'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
                         }),
-                        html.Div(id='trade-table', 
-                                children=plotter.create_trades_table(),
-                                style={
-                                    'width': '48%',
-                                    'backgroundColor': '#000020',
-                                    'borderRadius': '10px',
-                                    'padding': '15px',
-                                    'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
-                                })
+                        html.Div([
+                            html.H4("Trades Executed", 
+                                   style={
+                                       'color': '#00FFFF', 
+                                       'textAlign': 'center', 
+                                       'marginBottom': '15px'
+                                   }),
+                            html.Div(id='trade-table', 
+                                    children=plotter.create_trades_table())
+                        ], style={
+                            'width': '48%',
+                            'backgroundColor': '#000020',
+                            'borderRadius': '10px',
+                            'padding': '15px',
+                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
+                        })
                     ], style={
                         'display': 'flex',
                         'justifyContent': 'space-between',
