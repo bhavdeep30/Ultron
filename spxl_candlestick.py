@@ -16,31 +16,46 @@ TICKER = "SPXL"
 
 def get_available_dates(days=7):
     """Get a list of available trading dates for the past n days including today"""
-    # Get data for the past n+10 days (to account for weekends and holidays)
-    end_date = datetime.datetime.now() + datetime.timedelta(days=1)  # Add 1 day to include today
-    start_date = end_date - datetime.timedelta(days=days+10)
+    # Get current date
+    today = datetime.datetime.now()
+    today_str = today.strftime('%Y-%m-%d')
+    print(f"Current date: {today_str}")
+    
+    # Get data for the past n+15 days (to account for weekends and holidays)
+    end_date = today + datetime.timedelta(days=1)  # Add 1 day to include today
+    start_date = end_date - datetime.timedelta(days=days+15)
     
     # Download daily data to get available trading days
-    daily_data = yf.download(TICKER, start=start_date, end=end_date, interval="1d")
+    daily_data = yf.download(TICKER, start=start_date, end=end_date, interval="1d", progress=False)
     
-    # Force include today's date at the end of the list
-    today_str = datetime.datetime.now().strftime('%Y-%m-%d')
+    # Get all available dates in reverse chronological order (newest first)
+    all_dates = daily_data.index.strftime('%Y-%m-%d').tolist()
+    all_dates.reverse()  # Reverse to get newest first
     
-    # Get available dates excluding today (if it exists in the data)
-    available_dates = [d for d in daily_data.index.strftime('%Y-%m-%d').tolist() 
-                      if d != today_str][-days+1:]  # Leave room for today
+    # Make sure we have today at the beginning if market is open
+    if today_str not in all_dates:
+        # Check if market might be open today (weekday)
+        if today.weekday() < 5:  # 0-4 are Monday to Friday
+            # Try to get intraday data for today
+            today_data = yf.download(TICKER, start=today_str, end=None, interval="1d", progress=False)
+            if not today_data.empty:
+                all_dates.insert(0, today_str)
+    else:
+        # Make sure today is first
+        all_dates.remove(today_str)
+        all_dates.insert(0, today_str)
     
-    # Always add today as the last date
-    available_dates.append(today_str)
+    # Take only the requested number of days
+    available_dates = all_dates[:days]
     
-    print(f"Available dates: {available_dates}")
+    print(f"Available dates (newest first): {available_dates}")
     return available_dates
 
 class DashPlotter:
     def __init__(self, days=7):
         self.days = days
         self.available_dates = get_available_dates(days)
-        self.selected_date = self.available_dates[-1]  # Default to latest date
+        self.selected_date = self.available_dates[0]  # Default to today/most recent date
         self.trades = []
         self.df = None
         
@@ -628,16 +643,25 @@ def create_dash_app():
         current_index = int(current_index)
         
         if trigger_id == 'prev-date-button' and prev_clicks:
-            # Move to previous date
+            # Move to previous date (next in the list since our list is newest first)
             if current_index < len(available_dates) - 1:
                 current_index += 1
         elif trigger_id in ['refresh-button', 'auto-refresh-interval']:
-            # Refresh available dates
+            # Refresh available dates with newest first
             plotter.available_dates = get_available_dates(plotter.days)
             available_dates = plotter.available_dates
-            # If we're viewing today (index 0), stay there
+            
+            # If we're viewing today (index 0), stay there after refresh
             if current_index == 0:
                 current_index = 0
+            # Otherwise, try to find the date we were viewing in the new list
+            else:
+                old_date = available_dates_str.split(',')[current_index]
+                if old_date in plotter.available_dates:
+                    current_index = plotter.available_dates.index(old_date)
+                else:
+                    # If date not found, reset to most recent
+                    current_index = 0
                 
         return str(current_index), ','.join(available_dates)
     
