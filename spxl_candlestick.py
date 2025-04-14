@@ -494,7 +494,7 @@ def create_dash_app():
                        'paddingTop': '20px'
                    }),
             
-            # Date navigation with back button and current date display
+            # Date navigation with back/next buttons and current date display
             html.Div([
                 html.Button('◀ PREV', id='prev-date-button', 
                            style={
@@ -519,6 +519,17 @@ def create_dash_app():
                             'backgroundColor': '#000040',
                             'boxShadow': '0 0 5px #00FFFF'
                         }),
+                html.Button('NEXT ▶', id='next-date-button', 
+                           style={
+                               'backgroundColor': '#000040',
+                               'color': '#00FFFF',
+                               'border': '1px solid #00FFFF',
+                               'borderRadius': '5px',
+                               'padding': '10px 15px',
+                               'marginLeft': '15px',
+                               'cursor': 'pointer',
+                               'boxShadow': '0 0 5px #00FFFF'
+                           }),
                 html.Button('REFRESH', id='refresh-button', n_clicks=0, 
                            style={
                                'backgroundColor': '#000040',
@@ -621,17 +632,18 @@ def create_dash_app():
         selected_date = available_dates[current_index]
         return f"DATE: {selected_date}"
     
-    # Callback for previous date button
+    # Callback for date navigation buttons
     @app.callback(
         [Output('current-date-index', 'children'),
          Output('available-dates-store', 'children')],
         [Input('prev-date-button', 'n_clicks'),
+         Input('next-date-button', 'n_clicks'),
          Input('refresh-button', 'n_clicks'),
          Input('auto-refresh-interval', 'n_intervals')],
         [State('current-date-index', 'children'),
          State('available-dates-store', 'children')]
     )
-    def navigate_dates(prev_clicks, refresh_clicks, n_intervals, current_index, available_dates_str):
+    def navigate_dates(prev_clicks, next_clicks, refresh_clicks, n_intervals, current_index, available_dates_str):
         ctx = dash.callback_context
         
         if not ctx.triggered:
@@ -646,6 +658,10 @@ def create_dash_app():
             # Move to previous date (next in the list since our list is newest first)
             if current_index < len(available_dates) - 1:
                 current_index += 1
+        elif trigger_id == 'next-date-button' and next_clicks:
+            # Move to next date (previous in the list since our list is newest first)
+            if current_index > 0:
+                current_index -= 1
         elif trigger_id in ['refresh-button', 'auto-refresh-interval']:
             # Refresh available dates with newest first
             plotter.available_dates = get_available_dates(plotter.days)
