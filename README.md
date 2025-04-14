@@ -7,7 +7,9 @@
 2. Make sure to select the "Add python.exe to Path" option in the installer (Important)
    ![image](https://github.com/user-attachments/assets/31507aff-c022-4dd4-8a53-fc4dbfd4fb08)
 
-3. Download as Zip
+3. On GitHub, click Code and Download as Zip:
+![image](https://github.com/user-attachments/assets/810a5a4e-65c6-4f33-a601-e9b6c852b426)
+
    
 4. Extract the zip file
    
