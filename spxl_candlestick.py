@@ -358,7 +358,10 @@ class DashPlotter:
             zerolinecolor="#0F3460",
             tickfont=dict(color="#00FFFF"),
             tickformat='%I:%M %p',  # 12-hour format
-            hoverformat='%I:%M %p MST'  # 12-hour format with MST for hover
+            hoverformat='%I:%M %p MST',  # 12-hour format with MST for hover
+            # Convert datetime to MST timezone for x-axis
+            tickvals=self.df.index,
+            ticktext=[format_time_mst(dt).replace(' MST', '') for dt in self.df.index]
         )
         
         return fig
