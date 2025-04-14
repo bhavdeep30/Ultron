@@ -896,7 +896,8 @@ def create_dash_app():
                                    style={
                                        'color': '#00FFFF', 
                                        'textAlign': 'center', 
-                                       'marginBottom': '15px'
+                                       'marginBottom': '15px',
+                                       'marginTop': '20px'  # Add 20px upper padding
                                    }),
                             html.Div(id='trade-table', 
                                     children=plotter.create_trades_table())
