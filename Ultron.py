@@ -708,7 +708,7 @@ def create_dash_app():
                 'SPXL',                # Default ticker
                 [html.Div("READY TO TRADE", 
                          style={
-                             'color': '#00FFFF',
+                             'color': '#00FF00',
                              'textAlign': 'center',
                              'fontFamily': 'monospace',
                              'fontSize': '16px',
