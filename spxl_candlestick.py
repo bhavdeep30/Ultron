@@ -428,11 +428,6 @@ class DashPlotter:
                     html.Span(f"${total_profit:.2f} ({total_profit_pct:.2f}%)", 
                               style={'color': '#00FF00' if total_profit > 0 else '#FF3333'})
                 ], style={'marginBottom': '8px'}),
-                html.Li([
-                    "Average profit per trade: ",
-                    html.Span(f"${avg_profit:.2f} ({avg_profit_pct:.2f}%)",
-                              style={'color': '#00FF00' if avg_profit > 0 else '#FF3333'})
-                ], style={'marginBottom': '8px'}),
                 html.Li(f"Win rate: {win_rate:.2f}% ({winning_trades}/{len(self.trades)})", 
                        style={'color': '#00FFFF'})
             ], style={'listStyleType': 'none', 'padding': '15px', 'backgroundColor': '#000030', 
@@ -461,7 +456,7 @@ def create_dash_app():
     # Define the ticker selection layout
     ticker_selection_layout = html.Div([
         html.Div([
-            html.H1("ULTRON MARKET ANALYZER", 
+            html.H1("ULTRON MARKET TRADE", 
                    style={
                        'textAlign': 'center',
                        'color': '#00FFFF',
@@ -641,7 +636,7 @@ def create_dash_app():
                                   }),
                     ], style={'position': 'absolute', 'left': '20px', 'top': '20px'}),
                     
-                    html.H1(f"{ticker} ULTRON ANALYSIS", 
+                    html.H1(f"{ticker} ULTRON TRADE", 
                            style={
                                'textAlign': 'center',
                                'color': '#00FFFF',
