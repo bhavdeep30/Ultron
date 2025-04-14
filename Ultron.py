@@ -653,12 +653,17 @@ def create_dash_app():
             'borderRadius': '15px',
             'boxShadow': '0 0 30px rgba(0, 255, 255, 0.3)',
             'maxWidth': '800px',
-            'margin': '100px auto'
+            'margin': '0 auto',
+            'position': 'absolute',
+            'top': '50%',
+            'left': '50%',
+            'transform': 'translate(-50%, -50%)'
         })
     ], style={
         'backgroundColor': '#000010',
         'minHeight': '100vh',
-        'fontFamily': 'monospace'
+        'fontFamily': 'monospace',
+        'position': 'relative'
     })
     
     # Define the main app layout (initially hidden)
