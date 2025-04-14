@@ -23,3 +23,5 @@
 7. Run: `python Ultron.py`
 
 8. Open in web browser: http://127.0.0.1:8050/
+![image](https://github.com/user-attachments/assets/4d8dc2c1-e34b-4353-82ce-89bf6f3c5d50)
+
