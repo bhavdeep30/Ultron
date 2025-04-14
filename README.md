@@ -12,6 +12,7 @@
 4. Extract the zip file
    
 5. Hold Shift + Right Click in the extracted folder and click "Open PowerShell window here"
+   
    ![image](https://github.com/user-attachments/assets/b3b876aa-986f-4666-ae48-e64dd29aba84)
 
 6. Run: `pip install -r requirements.txt`
