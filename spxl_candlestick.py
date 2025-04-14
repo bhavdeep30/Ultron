@@ -576,16 +576,27 @@ def create_dash_app():
     # Define the ticker selection layout
     ticker_selection_layout = html.Div([
         html.Div([
-            html.H1("ULTRON MARKET TRADE", 
-                   style={
-                       'textAlign': 'center',
-                       'color': '#00FFFF',
-                       'fontFamily': 'monospace',
-                       'letterSpacing': '3px',
-                       'textShadow': '0 0 10px #00FFFF',
-                       'marginBottom': '40px',
-                       'paddingTop': '40px'
-                   }),
+            html.Div([
+                html.H1("ULTRON", 
+                       style={
+                           'textAlign': 'center',
+                           'color': '#00FFFF',
+                           'fontFamily': 'monospace',
+                           'letterSpacing': '1px',
+                           'textShadow': '0 0 10px #00FFFF',
+                           'marginBottom': '5px',
+                           'paddingTop': '40px'
+                       }),
+                html.H1("TRADE", 
+                       style={
+                           'textAlign': 'center',
+                           'color': '#00FFFF',
+                           'fontFamily': 'monospace',
+                           'letterSpacing': '1px',
+                           'textShadow': '0 0 10px #00FFFF',
+                           'marginBottom': '40px',
+                       }),
+            ]),
             
             html.Div([
                 html.Label("ENTER TICKER SYMBOL:", 
@@ -756,16 +767,27 @@ def create_dash_app():
                                   }),
                     ], style={'position': 'absolute', 'left': '20px', 'top': '20px'}),
                     
-                    html.H1(f"{ticker} ULTRON TRADE", 
-                           style={
-                               'textAlign': 'center',
-                               'color': '#00FFFF',
-                               'fontFamily': 'monospace',
-                               'letterSpacing': '3px',
-                               'textShadow': '0 0 10px #00FFFF',
-                               'marginBottom': '20px',
-                               'paddingTop': '20px'
-                           }),
+                    html.Div([
+                        html.H1(f"{ticker} ULTRON", 
+                               style={
+                                   'textAlign': 'center',
+                                   'color': '#00FFFF',
+                                   'fontFamily': 'monospace',
+                                   'letterSpacing': '1px',
+                                   'textShadow': '0 0 10px #00FFFF',
+                                   'marginBottom': '5px',
+                                   'paddingTop': '20px'
+                               }),
+                        html.H1("TRADE", 
+                               style={
+                                   'textAlign': 'center',
+                                   'color': '#00FFFF',
+                                   'fontFamily': 'monospace',
+                                   'letterSpacing': '1px',
+                                   'textShadow': '0 0 10px #00FFFF',
+                                   'marginBottom': '20px',
+                               }),
+                    ]),
             
                     # Date navigation with back/next buttons and current date display
                     html.Div([
