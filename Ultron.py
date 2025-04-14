@@ -755,11 +755,11 @@ def create_dash_app():
                                       'color': '#00FFFF',
                                       'border': '1px solid #00FFFF',
                                       'borderRadius': '5px',
-                                      'padding': '8px 15px',
+                                      'padding': '16px 30px',
                                       'marginRight': '15px',
                                       'cursor': 'pointer',
                                       'boxShadow': '0 0 5px #00FFFF',
-                                      'fontSize': '12px'
+                                      'fontSize': '24px'
                                   }),
                     ], style={'position': 'absolute', 'left': '20px', 'top': '20px'}),
                     
