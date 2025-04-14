@@ -880,13 +880,23 @@ def create_dash_app():
                     # Trade summary and statistics
                     html.Div([
                         html.Div([
-                            html.Div(id='trade-summary', 
-                                    children=plotter.create_summary_stats(),
-                                    style={
-                                        'marginBottom': '20px'
-                                    }),
-                            html.Div(id='multi-day-summary',
-                                    children=plotter.create_multi_day_summary())
+                            html.Div([
+                                html.Div(id='trade-summary', 
+                                        children=plotter.create_summary_stats(),
+                                        style={
+                                            'width': '48%',
+                                            'marginRight': '4%'
+                                        }),
+                                html.Div(id='multi-day-summary',
+                                        children=plotter.create_multi_day_summary(),
+                                        style={
+                                            'width': '48%'
+                                        })
+                            ], style={
+                                'display': 'flex',
+                                'justifyContent': 'space-between',
+                                'marginBottom': '20px'
+                            })
                         ], style={
                             'width': '48%',
                             'backgroundColor': '#000020',
