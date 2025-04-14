@@ -415,7 +415,7 @@ class DashPlotter:
         total_row = html.Tr([
             html.Td("TOTAL", style={'font-weight': 'bold'}),
             html.Td(""),
-            html.Td(f"${total_profit:.2f}", style={'font-weight': 'bold', 'color': 'green' if total_profit > 0 else 'red'}),
+            html.Td(""),
             html.Td(f"{total_profit_pct:.2f}%", style={'font-weight': 'bold', 'color': 'green' if total_profit_pct > 0 else 'red'})
         ])
         
@@ -458,7 +458,7 @@ class DashPlotter:
                        style={'color': '#00FFFF', 'marginBottom': '8px'}),
                 html.Li([
                     "Total profit: ",
-                    html.Span(f"${total_profit:.2f} ({total_profit_pct:.2f}%)", 
+                    html.Span(f"{total_profit_pct:.2f}%", 
                               style={'color': '#00FF00' if total_profit > 0 else '#FF3333'})
                 ], style={'marginBottom': '8px'}),
                 html.Li(f"Win rate: {win_rate:.2f}% ({winning_trades}/{len(self.trades)})", 
