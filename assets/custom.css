@@ -69,3 +69,27 @@ button:hover {
 #auto-refresh-indicator {
     animation: pulse 2s infinite;
 }
+
+/* Ticker input styling */
+input:focus {
+    outline: none !important;
+    box-shadow: 0 0 15px #00FFFF !important;
+}
+
+/* Analyze button glow effect */
+#analyze-button:hover {
+    background-color: #000099 !important;
+    box-shadow: 0 0 20px #00FFFF !important;
+    text-shadow: 0 0 10px #00FFFF !important;
+}
+
+/* Loading animation */
+@keyframes blink {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+#loading-message div {
+    animation: blink 1.5s infinite;
+}

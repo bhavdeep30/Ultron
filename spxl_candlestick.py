@@ -12,9 +12,7 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 
-TICKER = "SPXL"
-
-def get_available_dates(days=7):
+def get_available_dates(ticker, days=7):
     """Get a list of available trading dates for the past n days including today"""
     # Get current date
     today = datetime.datetime.now()
@@ -26,7 +24,7 @@ def get_available_dates(days=7):
     start_date = end_date - datetime.timedelta(days=days+15)
     
     # Download daily data to get available trading days
-    daily_data = yf.download(TICKER, start=start_date, end=end_date, interval="1d", progress=False)
+    daily_data = yf.download(ticker, start=start_date, end=end_date, interval="1d", progress=False)
     
     # Get all available dates in reverse chronological order (newest first)
     all_dates = daily_data.index.strftime('%Y-%m-%d').tolist()
@@ -37,7 +35,7 @@ def get_available_dates(days=7):
         # Check if market might be open today (weekday)
         if today.weekday() < 5:  # 0-4 are Monday to Friday
             # Try to get intraday data for today
-            today_data = yf.download(TICKER, start=today_str, end=None, interval="1d", progress=False)
+            today_data = yf.download(ticker, start=today_str, end=None, interval="1d", progress=False)
             if not today_data.empty:
                 all_dates.insert(0, today_str)
     else:
@@ -52,10 +50,11 @@ def get_available_dates(days=7):
     return available_dates
 
 class DashPlotter:
-    def __init__(self, days=7):
+    def __init__(self, ticker="SPXL", days=7):
+        self.ticker = ticker
         self.days = days
-        self.available_dates = get_available_dates(days)
-        self.selected_date = self.available_dates[0]  # Default to today/most recent date
+        self.available_dates = get_available_dates(ticker, days)
+        self.selected_date = self.available_dates[0] if self.available_dates else datetime.datetime.now().strftime('%Y-%m-%d')
         self.trades = []
         self.df = None
         
@@ -64,7 +63,7 @@ class DashPlotter:
         if date_str is not None:
             self.selected_date = date_str
             
-        print(f"Analyzing {TICKER} for {self.selected_date}")
+        print(f"Analyzing {self.ticker} for {self.selected_date}")
         
         # Download 5-minute interval data for the selected trading day
         start_date = pd.to_datetime(self.selected_date)
@@ -77,7 +76,7 @@ class DashPlotter:
             print(f"Fetching real-time data for today ({today_str})...")
             # Force a fresh download by setting a unique period
             self.df = yf.download(
-                TICKER, 
+                self.ticker, 
                 start=start_date, 
                 end=end_date, 
                 interval="5m", 
@@ -89,7 +88,7 @@ class DashPlotter:
             # For historical dates, we can use a fixed end date
             end_date = start_date + datetime.timedelta(days=1)
             self.df = yf.download(
-                TICKER, 
+                self.ticker, 
                 start=start_date, 
                 end=end_date, 
                 interval="5m", 
@@ -100,11 +99,11 @@ class DashPlotter:
         
         # Check if we got any data
         if self.df.empty:
-            print(f"No data available for {TICKER} on {self.selected_date}")
+            print(f"No data available for {self.ticker} on {self.selected_date}")
             return None
         
         # Fix column names
-        self.df = self.df[TICKER].copy()
+        self.df = self.df[self.ticker].copy() if self.ticker in self.df.columns else self.df
         self.df.dropna(inplace=True)
         
         # Ensure numeric types
@@ -180,7 +179,7 @@ class DashPlotter:
                     print("Warning: Buy signal on the last candle - no sell possible")
         
         # Print trade summary
-        print(f"\nTrading Summary for {TICKER} on {self.selected_date}:")
+        print(f"\nTrading Summary for {self.ticker} on {self.selected_date}:")
         print(f"Number of trades: {len(self.trades)}")
         if self.trades:
             total_profit = sum(trade['profit'] for trade in self.trades)
@@ -203,7 +202,7 @@ class DashPlotter:
             # Return an empty figure with a message
             fig = go.Figure()
             fig.add_annotation(
-                text=f"No data available for {TICKER} on {self.selected_date}",
+                text=f"No data available for {self.ticker} on {self.selected_date}",
                 xref="paper", yref="paper",
                 x=0.5, y=0.5, showarrow=False,
                 font=dict(size=20, color="#00FFFF")
@@ -221,7 +220,7 @@ class DashPlotter:
             rows=2, cols=1, 
             shared_xaxes=True,
             vertical_spacing=0.03,
-            subplot_titles=(f'{TICKER} - 5 Minute Candlestick Chart for {self.selected_date}', ''),
+            subplot_titles=(f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date}', ''),
             row_heights=[0.7, 0.3]
         )
         
@@ -306,7 +305,7 @@ class DashPlotter:
         
         # Update layout with futuristic dark theme
         fig.update_layout(
-            title=f'{TICKER} - 5 Minute Candlestick Chart for {self.selected_date}',
+            title=f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date}',
             xaxis_title='Time',
             yaxis_title='Price ($)',
             height=800,
@@ -419,7 +418,7 @@ class DashPlotter:
         win_rate = (winning_trades / len(self.trades)) * 100
         
         return html.Div([
-            html.H4(f"Trading Summary for {TICKER} on {self.selected_date}", 
+            html.H4(f"Trading Summary for {self.ticker} on {self.selected_date}", 
                    style={'color': '#00FFFF', 'textAlign': 'center', 'marginBottom': '15px'}),
             html.Ul([
                 html.Li(f"Number of trades: {len(self.trades)}", 
@@ -445,17 +444,11 @@ class DashPlotter:
         if days is None:
             days = self.days * 2  # Double the number of days
         self.days = days
-        self.available_dates = get_available_dates(days)
+        self.available_dates = get_available_dates(self.ticker, days)
         return self.available_dates
 
 # Create the Dash app
 def create_dash_app():
-    # Initialize the plotter
-    plotter = DashPlotter()
-    
-    # Analyze data for the default date
-    plotter.analyze_data()
-    
     # Create the Dash app with dark theme
     app = dash.Dash(
         __name__,
@@ -465,150 +458,85 @@ def create_dash_app():
         ]
     )
     
-    # Define the app layout with futuristic dark theme
-    app.layout = html.Div([
-        # Hidden div for storing current date index
-        html.Div(id='current-date-index', style={'display': 'none'}, children='0'),
-        
-        # Hidden div for storing available dates
-        html.Div(id='available-dates-store', style={'display': 'none'}, 
-                children=','.join(plotter.available_dates)),
-        
-        # Auto-refresh interval (5 minutes = 300000 ms)
-        dcc.Interval(
-            id='auto-refresh-interval',
-            interval=300000,  # in milliseconds
-            n_intervals=0
-        ),
-        
-        # Header with futuristic styling
+    # Define the ticker selection layout
+    ticker_selection_layout = html.Div([
         html.Div([
-            html.H1(f"{TICKER} ULTRON ANALYSIS", 
+            html.H1("ULTRON MARKET ANALYZER", 
                    style={
                        'textAlign': 'center',
                        'color': '#00FFFF',
                        'fontFamily': 'monospace',
                        'letterSpacing': '3px',
                        'textShadow': '0 0 10px #00FFFF',
-                       'marginBottom': '20px',
-                       'paddingTop': '20px'
+                       'marginBottom': '40px',
+                       'paddingTop': '40px'
                    }),
             
-            # Date navigation with back/next buttons and current date display
             html.Div([
-                html.Button('◀ PREV', id='prev-date-button', 
+                html.Label("ENTER TICKER SYMBOL:", 
+                          style={
+                              'color': '#00FFFF',
+                              'fontFamily': 'monospace',
+                              'fontSize': '18px',
+                              'marginRight': '15px',
+                              'textShadow': '0 0 5px #00FFFF'
+                          }),
+                dcc.Input(
+                    id='ticker-input',
+                    type='text',
+                    value='SPXL',
+                    style={
+                        'backgroundColor': '#000040',
+                        'color': '#00FFFF',
+                        'border': '2px solid #00FFFF',
+                        'borderRadius': '5px',
+                        'padding': '10px 15px',
+                        'fontSize': '18px',
+                        'width': '150px',
+                        'textAlign': 'center',
+                        'fontFamily': 'monospace',
+                        'boxShadow': '0 0 10px #00FFFF'
+                    }
+                ),
+                html.Button('ANALYZE', id='analyze-button', n_clicks=0,
                            style={
-                               'backgroundColor': '#000040',
+                               'backgroundColor': '#000080',
                                'color': '#00FFFF',
-                               'border': '1px solid #00FFFF',
+                               'border': '2px solid #00FFFF',
                                'borderRadius': '5px',
-                               'padding': '10px 15px',
-                               'marginRight': '15px',
-                               'cursor': 'pointer',
-                               'boxShadow': '0 0 5px #00FFFF'
-                           }),
-                html.Div(id='current-date-display', 
-                        children=f"DATE: {plotter.selected_date}",
-                        style={
-                            'color': '#00FFFF',
-                            'fontFamily': 'monospace',
-                            'fontSize': '18px',
-                            'padding': '10px 20px',
-                            'border': '1px solid #00FFFF',
-                            'borderRadius': '5px',
-                            'backgroundColor': '#000040',
-                            'boxShadow': '0 0 5px #00FFFF'
-                        }),
-                html.Button('NEXT ▶', id='next-date-button', 
-                           style={
-                               'backgroundColor': '#000020',  # Darker background for disabled
-                               'color': '#336666',  # Muted color for disabled
-                               'border': '1px solid #336666',
-                               'borderRadius': '5px',
-                               'padding': '10px 15px',
-                               'marginLeft': '15px',
-                               'cursor': 'not-allowed',  # Change cursor to indicate disabled
-                               'opacity': '0.5'  # Reduce opacity for disabled
-                           }),
-                html.Button('REFRESH', id='refresh-button', n_clicks=0, 
-                           style={
-                               'backgroundColor': '#000040',
-                               'color': '#00FFFF',
-                               'border': '1px solid #00FFFF',
-                               'borderRadius': '5px',
-                               'padding': '10px 15px',
+                               'padding': '10px 20px',
                                'marginLeft': '15px',
                                'cursor': 'pointer',
-                               'boxShadow': '0 0 5px #00FFFF'
-                           }),
-                html.Div(id='auto-refresh-indicator',
-                        children="AUTO-REFRESH: ACTIVE",
-                        style={
-                            'color': '#00FFFF',
-                            'fontFamily': 'monospace',
-                            'fontSize': '14px',
-                            'padding': '5px 10px',
-                            'marginLeft': '15px',
-                            'border': '1px solid #00FFFF',
-                            'borderRadius': '5px',
-                            'backgroundColor': '#000040',
-                            'boxShadow': '0 0 5px #00FFFF'
-                        })
-            ], style={
-                'display': 'flex', 
-                'alignItems': 'center', 
-                'justifyContent': 'center',
-                'marginBottom': '20px'
-            }),
-        ], style={
-            'backgroundColor': '#000020',
-            'padding': '10px',
-            'borderBottom': '2px solid #00FFFF',
-            'boxShadow': '0 5px 15px rgba(0, 255, 255, 0.3)'
-        }),
-        
-        # Main content area
-        html.Div([
-            # Candlestick chart
-            dcc.Graph(
-                id='candlestick-chart', 
-                figure=plotter.create_figure(),
-                style={
-                    'backgroundColor': '#000020',
-                    'borderRadius': '10px',
-                    'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)',
-                    'marginBottom': '20px'
-                }
-            ),
-            
-            # Trade summary and statistics
-            html.Div([
-                html.Div(id='trade-summary', 
-                        children=plotter.create_summary_stats(),
-                        style={
-                            'width': '48%',
-                            'backgroundColor': '#000020',
-                            'borderRadius': '10px',
-                            'padding': '15px',
-                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
-                        }),
-                html.Div(id='trade-table', 
-                        children=plotter.create_trades_table(),
-                        style={
-                            'width': '48%',
-                            'backgroundColor': '#000020',
-                            'borderRadius': '10px',
-                            'padding': '15px',
-                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
-                        })
+                               'boxShadow': '0 0 10px #00FFFF',
+                               'fontSize': '18px',
+                               'fontFamily': 'monospace',
+                               'fontWeight': 'bold'
+                           })
             ], style={
                 'display': 'flex',
-                'justifyContent': 'space-between',
-                'marginBottom': '20px'
-            })
+                'alignItems': 'center',
+                'justifyContent': 'center',
+                'marginBottom': '40px'
+            }),
+            
+            html.Div(id='loading-message', children=[
+                html.Div("READY TO ANALYZE", 
+                        style={
+                            'color': '#00FFFF',
+                            'textAlign': 'center',
+                            'fontFamily': 'monospace',
+                            'fontSize': '16px',
+                            'marginTop': '20px',
+                            'animation': 'pulse 2s infinite'
+                        })
+            ])
         ], style={
-            'padding': '20px',
-            'backgroundColor': '#000010'
+            'backgroundColor': '#000020',
+            'padding': '40px',
+            'borderRadius': '15px',
+            'boxShadow': '0 0 30px rgba(0, 255, 255, 0.3)',
+            'maxWidth': '800px',
+            'margin': '100px auto'
         })
     ], style={
         'backgroundColor': '#000010',
@@ -616,14 +544,286 @@ def create_dash_app():
         'fontFamily': 'monospace'
     })
     
+    # Define the main app layout (initially hidden)
+    main_app_layout = html.Div(id='main-app-container', style={'display': 'none'})
+    
+    # Combine layouts
+    app.layout = html.Div([
+        dcc.Store(id='ticker-store', data='SPXL'),
+        html.Div(id='ticker-selection-container', children=ticker_selection_layout),
+        main_app_layout
+    ])
+    
+    # Callback to handle ticker selection and initialize the main app
+    @app.callback(
+        [Output('ticker-selection-container', 'style'),
+         Output('main-app-container', 'style'),
+         Output('main-app-container', 'children'),
+         Output('ticker-store', 'data'),
+         Output('loading-message', 'children')],
+        [Input('analyze-button', 'n_clicks')],
+        [State('ticker-input', 'value')]
+    )
+    def initialize_app(n_clicks, ticker_value):
+        if not n_clicks:
+            # Initial state - show ticker selection, hide main app
+            return (
+                {'display': 'block'},  # Show ticker selection
+                {'display': 'none'},   # Hide main app
+                [],                    # Empty main app
+                'SPXL',                # Default ticker
+                [html.Div("READY TO ANALYZE", 
+                         style={
+                             'color': '#00FFFF',
+                             'textAlign': 'center',
+                             'fontFamily': 'monospace',
+                             'fontSize': '16px',
+                             'marginTop': '20px',
+                             'animation': 'pulse 2s infinite'
+                         })]
+            )
+        
+        # Show loading message
+        loading_message = [
+            html.Div("INITIALIZING DATA ANALYSIS...", 
+                    style={
+                        'color': '#00FF00',
+                        'textAlign': 'center',
+                        'fontFamily': 'monospace',
+                        'fontSize': '16px',
+                        'marginTop': '20px',
+                        'animation': 'pulse 1s infinite'
+                    })
+        ]
+        
+        # Validate ticker
+        ticker = ticker_value.strip().upper()
+        if not ticker:
+            ticker = 'SPXL'
+            
+        try:
+            # Initialize the plotter with the selected ticker
+            plotter = DashPlotter(ticker=ticker)
+            
+            # Analyze data for the default date
+            plotter.analyze_data()
+    
+            # Create the main app layout with futuristic dark theme
+            main_app = html.Div([
+                # Hidden div for storing current date index
+                html.Div(id='current-date-index', style={'display': 'none'}, children='0'),
+                
+                # Hidden div for storing available dates
+                html.Div(id='available-dates-store', style={'display': 'none'}, 
+                        children=','.join(plotter.available_dates)),
+        
+                # Auto-refresh interval (5 minutes = 300000 ms)
+                dcc.Interval(
+                    id='auto-refresh-interval',
+                    interval=300000,  # in milliseconds
+                    n_intervals=0
+                ),
+        
+                # Header with futuristic styling
+                html.Div([
+                    html.Div([
+                        html.Button('◀ BACK TO TICKER SELECTION', id='back-to-ticker-button', 
+                                  style={
+                                      'backgroundColor': '#000040',
+                                      'color': '#00FFFF',
+                                      'border': '1px solid #00FFFF',
+                                      'borderRadius': '5px',
+                                      'padding': '8px 15px',
+                                      'marginRight': '15px',
+                                      'cursor': 'pointer',
+                                      'boxShadow': '0 0 5px #00FFFF',
+                                      'fontSize': '12px'
+                                  }),
+                    ], style={'position': 'absolute', 'left': '20px', 'top': '20px'}),
+                    
+                    html.H1(f"{ticker} ULTRON ANALYSIS", 
+                           style={
+                               'textAlign': 'center',
+                               'color': '#00FFFF',
+                               'fontFamily': 'monospace',
+                               'letterSpacing': '3px',
+                               'textShadow': '0 0 10px #00FFFF',
+                               'marginBottom': '20px',
+                               'paddingTop': '20px'
+                           }),
+            
+                    # Date navigation with back/next buttons and current date display
+                    html.Div([
+                        html.Button('◀ PREV', id='prev-date-button', 
+                                   style={
+                                       'backgroundColor': '#000040',
+                                       'color': '#00FFFF',
+                                       'border': '1px solid #00FFFF',
+                                       'borderRadius': '5px',
+                                       'padding': '10px 15px',
+                                       'marginRight': '15px',
+                                       'cursor': 'pointer',
+                                       'boxShadow': '0 0 5px #00FFFF'
+                                   }),
+                        html.Div(id='current-date-display', 
+                                children=f"DATE: {plotter.selected_date}",
+                                style={
+                                    'color': '#00FFFF',
+                                    'fontFamily': 'monospace',
+                                    'fontSize': '18px',
+                                    'padding': '10px 20px',
+                                    'border': '1px solid #00FFFF',
+                                    'borderRadius': '5px',
+                                    'backgroundColor': '#000040',
+                                    'boxShadow': '0 0 5px #00FFFF'
+                                }),
+                        html.Button('NEXT ▶', id='next-date-button', 
+                                   style={
+                                       'backgroundColor': '#000020',  # Darker background for disabled
+                                       'color': '#336666',  # Muted color for disabled
+                                       'border': '1px solid #336666',
+                                       'borderRadius': '5px',
+                                       'padding': '10px 15px',
+                                       'marginLeft': '15px',
+                                       'cursor': 'not-allowed',  # Change cursor to indicate disabled
+                                       'opacity': '0.5'  # Reduce opacity for disabled
+                                   }),
+                        html.Button('REFRESH', id='refresh-button', n_clicks=0, 
+                                   style={
+                                       'backgroundColor': '#000040',
+                                       'color': '#00FFFF',
+                                       'border': '1px solid #00FFFF',
+                                       'borderRadius': '5px',
+                                       'padding': '10px 15px',
+                                       'marginLeft': '15px',
+                                       'cursor': 'pointer',
+                                       'boxShadow': '0 0 5px #00FFFF'
+                                   }),
+                        html.Div(id='auto-refresh-indicator',
+                                children="AUTO-REFRESH: ACTIVE",
+                                style={
+                                    'color': '#00FFFF',
+                                    'fontFamily': 'monospace',
+                                    'fontSize': '14px',
+                                    'padding': '5px 10px',
+                                    'marginLeft': '15px',
+                                    'border': '1px solid #00FFFF',
+                                    'borderRadius': '5px',
+                                    'backgroundColor': '#000040',
+                                    'boxShadow': '0 0 5px #00FFFF'
+                                })
+                    ], style={
+                        'display': 'flex', 
+                        'alignItems': 'center', 
+                        'justifyContent': 'center',
+                        'marginBottom': '20px'
+                    }),
+                ], style={
+                    'backgroundColor': '#000020',
+                    'padding': '10px',
+                    'borderBottom': '2px solid #00FFFF',
+                    'boxShadow': '0 5px 15px rgba(0, 255, 255, 0.3)',
+                    'position': 'relative'
+                }),
+                
+                # Main content area
+                html.Div([
+                    # Candlestick chart
+                    dcc.Graph(
+                        id='candlestick-chart', 
+                        figure=plotter.create_figure(),
+                        style={
+                            'backgroundColor': '#000020',
+                            'borderRadius': '10px',
+                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)',
+                            'marginBottom': '20px'
+                        }
+                    ),
+                    
+                    # Trade summary and statistics
+                    html.Div([
+                        html.Div(id='trade-summary', 
+                                children=plotter.create_summary_stats(),
+                                style={
+                                    'width': '48%',
+                                    'backgroundColor': '#000020',
+                                    'borderRadius': '10px',
+                                    'padding': '15px',
+                                    'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
+                                }),
+                        html.Div(id='trade-table', 
+                                children=plotter.create_trades_table(),
+                                style={
+                                    'width': '48%',
+                                    'backgroundColor': '#000020',
+                                    'borderRadius': '10px',
+                                    'padding': '15px',
+                                    'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
+                                })
+                    ], style={
+                        'display': 'flex',
+                        'justifyContent': 'space-between',
+                        'marginBottom': '20px'
+                    })
+                ], style={
+                    'padding': '20px',
+                    'backgroundColor': '#000010'
+                })
+            ], style={
+                'backgroundColor': '#000010',
+                'minHeight': '100vh',
+                'fontFamily': 'monospace'
+            })
+            
+            # Return the updated UI components
+            return (
+                {'display': 'none'},     # Hide ticker selection
+                {'display': 'block'},    # Show main app
+                main_app,                # Main app content
+                ticker,                  # Store ticker value
+                loading_message          # Loading message
+            )
+        except Exception as e:
+            # If there's an error, show error message and keep ticker selection visible
+            error_message = [
+                html.Div(f"ERROR: {str(e)}", 
+                        style={
+                            'color': '#FF3333',
+                            'textAlign': 'center',
+                            'fontFamily': 'monospace',
+                            'fontSize': '16px',
+                            'marginTop': '20px'
+                        })
+            ]
+            return (
+                {'display': 'block'},    # Keep ticker selection visible
+                {'display': 'none'},     # Hide main app
+                [],                      # Empty main app
+                ticker,                  # Store ticker value
+                error_message            # Error message
+            )
+    
+    # Callback to go back to ticker selection
+    @app.callback(
+        [Output('ticker-selection-container', 'style', allow_duplicate=True),
+         Output('main-app-container', 'style', allow_duplicate=True)],
+        [Input('back-to-ticker-button', 'n_clicks')],
+        prevent_initial_call=True
+    )
+    def back_to_ticker_selection(n_clicks):
+        if n_clicks:
+            return {'display': 'block'}, {'display': 'none'}
+        raise PreventUpdate
+    
     # Callback to update the current date display and next button style
     @app.callback(
         [Output('current-date-display', 'children'),
          Output('next-date-button', 'style')],
         [Input('current-date-index', 'children'),
-         Input('available-dates-store', 'children')]
+         Input('available-dates-store', 'children'),
+         Input('ticker-store', 'data')]
     )
-    def update_date_display(current_index, available_dates_str):
+    def update_date_display(current_index, available_dates_str, ticker):
         available_dates = available_dates_str.split(',')
         current_index = int(current_index)
         
@@ -668,9 +868,10 @@ def create_dash_app():
          Input('refresh-button', 'n_clicks'),
          Input('auto-refresh-interval', 'n_intervals')],
         [State('current-date-index', 'children'),
-         State('available-dates-store', 'children')]
+         State('available-dates-store', 'children'),
+         State('ticker-store', 'data')]
     )
-    def navigate_dates(prev_clicks, next_clicks, refresh_clicks, n_intervals, current_index, available_dates_str):
+    def navigate_dates(prev_clicks, next_clicks, refresh_clicks, n_intervals, current_index, available_dates_str, ticker):
         ctx = dash.callback_context
         
         if not ctx.triggered:
@@ -691,8 +892,7 @@ def create_dash_app():
                 current_index -= 1
         elif trigger_id in ['refresh-button', 'auto-refresh-interval']:
             # Refresh available dates with newest first
-            plotter.available_dates = get_available_dates(plotter.days)
-            available_dates = plotter.available_dates
+            available_dates = get_available_dates(ticker, int(plotter.days) if hasattr(plotter, 'days') else 7)
             
             # If we're viewing today (index 0), stay there after refresh
             if current_index == 0:
@@ -717,9 +917,10 @@ def create_dash_app():
          Input('refresh-button', 'n_clicks'),
          Input('auto-refresh-interval', 'n_intervals'),
          Input('next-date-button', 'n_clicks')],  # Add next button to trigger refresh
-        [State('available-dates-store', 'children')]
+        [State('available-dates-store', 'children'),
+         State('ticker-store', 'data')]
     )
-    def update_chart(current_index, n_clicks, n_intervals, next_clicks, available_dates_str):
+    def update_chart(current_index, n_clicks, n_intervals, next_clicks, available_dates_str, ticker):
         available_dates = available_dates_str.split(',')
         current_index = int(current_index)
         
@@ -728,7 +929,8 @@ def create_dash_app():
             
         selected_date = available_dates[current_index]
         
-        # Analyze data for the selected date
+        # Create a plotter for the current ticker and analyze data
+        plotter = DashPlotter(ticker=ticker)
         plotter.analyze_data(selected_date)
         
         # Create the figure and trade information
