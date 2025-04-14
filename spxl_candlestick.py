@@ -857,15 +857,21 @@ def create_dash_app():
                     
                     # Trade summary and statistics
                     html.Div([
-                        html.Div(id='trade-summary', 
-                                children=plotter.create_summary_stats(),
-                                style={
-                                    'width': '48%',
-                                    'backgroundColor': '#000020',
-                                    'borderRadius': '10px',
-                                    'padding': '15px',
-                                    'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
-                                }),
+                        html.Div([
+                            html.Div(id='trade-summary', 
+                                    children=plotter.create_summary_stats(),
+                                    style={
+                                        'marginBottom': '20px'
+                                    }),
+                            html.Div(id='multi-day-summary',
+                                    children=plotter.create_multi_day_summary())
+                        ], style={
+                            'width': '48%',
+                            'backgroundColor': '#000020',
+                            'borderRadius': '10px',
+                            'padding': '15px',
+                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
+                        }),
                         html.Div(id='trade-table', 
                                 children=plotter.create_trades_table(),
                                 style={
@@ -879,19 +885,7 @@ def create_dash_app():
                         'display': 'flex',
                         'justifyContent': 'space-between',
                         'marginBottom': '20px'
-                    }),
-                    
-                    # Multi-day summary
-                    html.Div(id='multi-day-summary',
-                            children=plotter.create_multi_day_summary(),
-                            style={
-                                'width': '100%',
-                                'backgroundColor': '#000020',
-                                'borderRadius': '10px',
-                                'padding': '15px',
-                                'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)',
-                                'marginBottom': '20px'
-                            })
+                    })
                 ], style={
                     'padding': '20px',
                     'backgroundColor': '#000010'
