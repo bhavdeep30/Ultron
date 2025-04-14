@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import sys
 import time
+import pytz
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import dash
@@ -48,6 +49,17 @@ def get_available_dates(ticker, days=7):
     
     print(f"Available dates (newest first): {available_dates}")
     return available_dates
+
+def format_time_mst(dt):
+    """Convert datetime to MST timezone and format in 12-hour format"""
+    # Convert to MST timezone
+    mst = pytz.timezone('US/Mountain')
+    if dt.tzinfo is None:
+        # Assume UTC for naive datetimes
+        dt = pytz.utc.localize(dt)
+    dt_mst = dt.astimezone(mst)
+    # Format in 12-hour format
+    return dt_mst.strftime('%I:%M %p MST')
 
 class DashPlotter:
     def __init__(self, ticker="SPXL", days=7):
@@ -220,7 +232,7 @@ class DashPlotter:
             rows=2, cols=1, 
             shared_xaxes=True,
             vertical_spacing=0.03,
-            subplot_titles=(f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date}', ''),
+            subplot_titles=(f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date} (MST)', ''),
             row_heights=[0.7, 0.3]
         )
         
@@ -305,7 +317,7 @@ class DashPlotter:
         
         # Update layout with futuristic dark theme
         fig.update_layout(
-            title=f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date}',
+            title=f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date} (MST)',
             xaxis_title='Time',
             yaxis_title='Price ($)',
             height=800,
@@ -344,7 +356,9 @@ class DashPlotter:
         fig.update_xaxes(
             gridcolor="#0F3460",
             zerolinecolor="#0F3460",
-            tickfont=dict(color="#00FFFF")
+            tickfont=dict(color="#00FFFF"),
+            tickformat='%I:%M %p',  # 12-hour format
+            hoverformat='%I:%M %p MST'  # 12-hour format with MST for hover
         )
         
         return fig
@@ -371,7 +385,7 @@ class DashPlotter:
         rows = []
         for trade in self.trades:
             row = html.Tr([
-                html.Td(f"{trade['entry_time'].strftime('%H:%M')} → {trade['exit_time'].strftime('%H:%M')}"),
+                html.Td(f"{format_time_mst(trade['entry_time'])} → {format_time_mst(trade['exit_time'])}"),
                 html.Td(f"${trade['entry_price']:.2f} → ${trade['exit_price']:.2f}"),
                 html.Td(f"${trade['profit']:.2f}", style={'color': 'green' if trade['profit'] > 0 else 'red'}),
                 html.Td(f"{trade['profit_pct']:.2f}%", style={'color': 'green' if trade['profit_pct'] > 0 else 'red'})
