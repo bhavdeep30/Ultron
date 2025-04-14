@@ -387,7 +387,7 @@ class DashPlotter:
         """Create an HTML table with trade information"""
         if not self.trades:
             return html.Div("No trades executed on this date", 
-                           style={'color': '#00FFFF', 'textAlign': 'center', 'padding': '20px', 'fontSize': '18px'})
+                           style={'color': '#00FFFF', 'textAlign': 'center', 'padding': '20px', 'fontSize': '16px'})
         
         # Calculate total profit
         total_profit = sum(trade['profit'] for trade in self.trades)
@@ -395,10 +395,10 @@ class DashPlotter:
         
         # Create table header
         header = html.Tr([
-            html.Th("Time", style={'fontSize': '18px'}),
-            html.Th("Price", style={'fontSize': '18px'}),
-            html.Th("Profit ($)", style={'fontSize': '18px'}),
-            html.Th("Profit (%)", style={'fontSize': '18px'})
+            html.Th("Time", style={'fontSize': '16px'}),
+            html.Th("Price", style={'fontSize': '16px'}),
+            html.Th("Profit ($)", style={'fontSize': '16px'}),
+            html.Th("Profit (%)", style={'fontSize': '16px'})
         ])
         
         # Create table rows for each trade
@@ -406,23 +406,23 @@ class DashPlotter:
         for trade in self.trades:
             row = html.Tr([
                 html.Td(f"{format_time_mst(trade['entry_time'])} → {format_time_mst(trade['exit_time'])}", 
-                       style={'fontSize': '16px'}),
+                       style={'fontSize': '14px'}),
                 html.Td(f"${trade['entry_price']:.2f} → ${trade['exit_price']:.2f}", 
-                       style={'fontSize': '18px'}),
+                       style={'fontSize': '16px'}),
                 html.Td(f"${trade['profit']:.2f}", 
-                       style={'color': 'green' if trade['profit'] > 0 else 'red', 'fontSize': '20px', 'fontWeight': 'bold'}),
+                       style={'color': 'green' if trade['profit'] > 0 else 'red', 'fontSize': '18px', 'fontWeight': 'bold'}),
                 html.Td(f"{trade['profit_pct']:.2f}%", 
-                       style={'color': 'green' if trade['profit_pct'] > 0 else 'red', 'fontSize': '20px', 'fontWeight': 'bold'})
+                       style={'color': 'green' if trade['profit_pct'] > 0 else 'red', 'fontSize': '18px', 'fontWeight': 'bold'})
             ])
             rows.append(row)
         
         # Add total row
         total_row = html.Tr([
-            html.Td("TOTAL", style={'fontWeight': 'bold', 'fontSize': '18px'}),
-            html.Td("", style={'fontSize': '18px'}),
-            html.Td("", style={'fontSize': '18px'}),
+            html.Td("TOTAL", style={'fontWeight': 'bold', 'fontSize': '16px'}),
+            html.Td("", style={'fontSize': '16px'}),
+            html.Td("", style={'fontSize': '16px'}),
             html.Td(f"{total_profit_pct:.2f}%", 
-                   style={'fontWeight': 'bold', 'color': 'green' if total_profit_pct > 0 else 'red', 'fontSize': '22px'})
+                   style={'fontWeight': 'bold', 'color': 'green' if total_profit_pct > 0 else 'red', 'fontSize': '20px'})
         ])
         
         # Create the table with futuristic styling
