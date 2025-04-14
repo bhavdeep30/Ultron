@@ -1,0 +1,71 @@
+body {
+    background-color: #000010;
+    color: #00FFFF;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    padding: 0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000020;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #00FFFF;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00CCCC;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #0F3460;
+}
+
+th {
+    background-color: #000050;
+    color: #00FFFF;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+tr:hover {
+    background-color: #000040;
+}
+
+/* Button glow effect */
+button:hover {
+    box-shadow: 0 0 15px #00FFFF !important;
+    text-shadow: 0 0 5px #00FFFF !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Pulsing effect for the auto-refresh indicator */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+#auto-refresh-indicator {
+    animation: pulse 2s infinite;
+}

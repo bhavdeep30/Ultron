@@ -3,34 +3,37 @@ import yfinance as yf
 import numpy as np
 import datetime
 import sys
+import time
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 
 TICKER = "SPXL"
 
 def get_available_dates(days=7):
     """Get a list of available trading dates for the past n days including today"""
-    # Get data for the past n+5 days (to account for weekends and holidays)
+    # Get data for the past n+10 days (to account for weekends and holidays)
     end_date = datetime.datetime.now() + datetime.timedelta(days=1)  # Add 1 day to include today
-    start_date = end_date - datetime.timedelta(days=days+5)
+    start_date = end_date - datetime.timedelta(days=days+10)
     
     # Download daily data to get available trading days
     daily_data = yf.download(TICKER, start=start_date, end=end_date, interval="1d")
     
-    # Get the last n trading days
-    available_dates = daily_data.index[-days:].strftime('%Y-%m-%d').tolist()
-    
-    # Ensure today's date is included if market is open
+    # Force include today's date at the end of the list
     today_str = datetime.datetime.now().strftime('%Y-%m-%d')
-    if today_str not in available_dates and datetime.datetime.now().weekday() < 5:  # Weekday check
-        # Check if we have data for today
-        today_data = yf.download(TICKER, start=today_str, end=None, interval="1d")
-        if not today_data.empty:
-            available_dates.append(today_str)
     
+    # Get available dates excluding today (if it exists in the data)
+    available_dates = [d for d in daily_data.index.strftime('%Y-%m-%d').tolist() 
+                      if d != today_str][-days+1:]  # Leave room for today
+    
+    # Always add today as the last date
+    available_dates.append(today_str)
+    
+    print(f"Available dates: {available_dates}")
     return available_dates
 
 class DashPlotter:
@@ -49,18 +52,36 @@ class DashPlotter:
         print(f"Analyzing {TICKER} for {self.selected_date}")
         
         # Download 5-minute interval data for the selected trading day
-        # Use a 2-day period to ensure we get the full trading day
         start_date = pd.to_datetime(self.selected_date)
         
         # If analyzing today's data, use current time as end_date to get latest data
         today_str = datetime.datetime.now().strftime('%Y-%m-%d')
         if self.selected_date == today_str:
+            # For today, always fetch the most recent data
             end_date = datetime.datetime.now() + datetime.timedelta(hours=1)  # Add buffer for latest data
-            print("Fetching real-time data for today...")
+            print(f"Fetching real-time data for today ({today_str})...")
+            # Force a fresh download by setting a unique period
+            self.df = yf.download(
+                TICKER, 
+                start=start_date, 
+                end=end_date, 
+                interval="5m", 
+                auto_adjust=False, 
+                group_by='ticker',
+                progress=False
+            )
         else:
+            # For historical dates, we can use a fixed end date
             end_date = start_date + datetime.timedelta(days=1)
-            
-        self.df = yf.download(TICKER, start=start_date, end=end_date, interval="5m", auto_adjust=False, group_by='ticker')
+            self.df = yf.download(
+                TICKER, 
+                start=start_date, 
+                end=end_date, 
+                interval="5m", 
+                auto_adjust=False, 
+                group_by='ticker',
+                progress=False
+            )
         
         # Check if we got any data
         if self.df.empty:
@@ -170,7 +191,13 @@ class DashPlotter:
                 text=f"No data available for {TICKER} on {self.selected_date}",
                 xref="paper", yref="paper",
                 x=0.5, y=0.5, showarrow=False,
-                font=dict(size=20)
+                font=dict(size=20, color="#00FFFF")
+            )
+            fig.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="#000020",
+                plot_bgcolor="#000020",
+                font=dict(color="#00FFFF")
             )
             return fig
             
@@ -262,7 +289,7 @@ class DashPlotter:
             row=2, col=1
         )
         
-        # Update layout
+        # Update layout with futuristic dark theme
         fig.update_layout(
             title=f'{TICKER} - 5 Minute Candlestick Chart for {self.selected_date}',
             xaxis_title='Time',
@@ -274,20 +301,45 @@ class DashPlotter:
                 yanchor="bottom",
                 y=1.02,
                 xanchor="right",
-                x=1
-            )
+                x=1,
+                font=dict(color="#00FFFF")
+            ),
+            template="plotly_dark",
+            paper_bgcolor="#000020",
+            plot_bgcolor="#000020",
+            font=dict(color="#00FFFF"),
+            title_font=dict(color="#00FFFF", size=24),
+            margin=dict(l=50, r=50, t=80, b=50)
         )
         
-        # Update y-axis labels
-        fig.update_yaxes(title_text="Price ($)", row=1, col=1)
-        fig.update_yaxes(title_text="Volume", row=2, col=1)
+        # Update y-axis labels with futuristic styling
+        fig.update_yaxes(
+            title_text="Price ($)", 
+            row=1, col=1, 
+            gridcolor="#0F3460",
+            zerolinecolor="#0F3460",
+            tickfont=dict(color="#00FFFF")
+        )
+        fig.update_yaxes(
+            title_text="Volume", 
+            row=2, col=1, 
+            gridcolor="#0F3460",
+            zerolinecolor="#0F3460",
+            tickfont=dict(color="#00FFFF")
+        )
+        fig.update_xaxes(
+            gridcolor="#0F3460",
+            zerolinecolor="#0F3460",
+            tickfont=dict(color="#00FFFF")
+        )
         
         return fig
     
     def create_trades_table(self):
         """Create an HTML table with trade information"""
         if not self.trades:
-            return html.Div("No trades executed on this date")
+            return html.Div("No trades executed on this date", 
+                           style={'color': '#00FFFF', 'textAlign': 'center', 'padding': '20px'})
         
         # Calculate total profit
         total_profit = sum(trade['profit'] for trade in self.trades)
@@ -320,14 +372,19 @@ class DashPlotter:
             html.Td(f"{total_profit_pct:.2f}%", style={'font-weight': 'bold', 'color': 'green' if total_profit_pct > 0 else 'red'})
         ])
         
-        # Create the table
+        # Create the table with futuristic styling
         table = html.Table(
             [header] + rows + [total_row],
             style={
                 'width': '100%',
                 'border-collapse': 'collapse',
                 'margin-top': '20px',
-                'margin-bottom': '20px'
+                'margin-bottom': '20px',
+                'color': '#00FFFF',
+                'backgroundColor': '#000020',
+                'borderRadius': '10px',
+                'overflow': 'hidden',
+                'boxShadow': '0 0 10px #00FFFF'
             }
         )
         
@@ -336,7 +393,8 @@ class DashPlotter:
     def create_summary_stats(self):
         """Create a summary statistics component"""
         if not self.trades:
-            return html.Div("No trades executed on this date")
+            return html.Div("No trades executed on this date", 
+                           style={'color': '#00FFFF', 'textAlign': 'center', 'padding': '20px'})
         
         total_profit = sum(trade['profit'] for trade in self.trades)
         total_profit_pct = sum(trade['profit_pct'] for trade in self.trades)
@@ -346,22 +404,26 @@ class DashPlotter:
         win_rate = (winning_trades / len(self.trades)) * 100
         
         return html.Div([
-            html.H4(f"Trading Summary for {TICKER} on {self.selected_date}"),
+            html.H4(f"Trading Summary for {TICKER} on {self.selected_date}", 
+                   style={'color': '#00FFFF', 'textAlign': 'center', 'marginBottom': '15px'}),
             html.Ul([
-                html.Li(f"Number of trades: {len(self.trades)}"),
+                html.Li(f"Number of trades: {len(self.trades)}", 
+                       style={'color': '#00FFFF', 'marginBottom': '8px'}),
                 html.Li([
                     "Total profit: ",
                     html.Span(f"${total_profit:.2f} ({total_profit_pct:.2f}%)", 
-                              style={'color': 'green' if total_profit > 0 else 'red'})
-                ]),
+                              style={'color': '#00FF00' if total_profit > 0 else '#FF3333'})
+                ], style={'marginBottom': '8px'}),
                 html.Li([
                     "Average profit per trade: ",
                     html.Span(f"${avg_profit:.2f} ({avg_profit_pct:.2f}%)",
-                              style={'color': 'green' if avg_profit > 0 else 'red'})
-                ]),
-                html.Li(f"Win rate: {win_rate:.2f}% ({winning_trades}/{len(self.trades)})")
-            ])
-        ])
+                              style={'color': '#00FF00' if avg_profit > 0 else '#FF3333'})
+                ], style={'marginBottom': '8px'}),
+                html.Li(f"Win rate: {win_rate:.2f}% ({winning_trades}/{len(self.trades)})", 
+                       style={'color': '#00FFFF'})
+            ], style={'listStyleType': 'none', 'padding': '15px', 'backgroundColor': '#000030', 
+                     'borderRadius': '10px', 'boxShadow': '0 0 5px #00FFFF'})
+        ], style={'padding': '10px'})
     
     def load_more_dates(self, days=None):
         """Load more historical dates"""
@@ -379,51 +441,224 @@ def create_dash_app():
     # Analyze data for the default date
     plotter.analyze_data()
     
-    # Create the Dash app
-    app = dash.Dash(__name__)
+    # Create the Dash app with dark theme
+    app = dash.Dash(
+        __name__,
+        external_stylesheets=[dbc.themes.CYBORG],
+        meta_tags=[
+            {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+        ]
+    )
     
-    # Define the app layout
+    # Define the app layout with futuristic dark theme
     app.layout = html.Div([
-        html.H1(f"{TICKER} Candlestick Analysis", style={'textAlign': 'center'}),
+        # Hidden div for storing current date index
+        html.Div(id='current-date-index', style={'display': 'none'}, children='0'),
         
-        # Date selection dropdown
+        # Hidden div for storing available dates
+        html.Div(id='available-dates-store', style={'display': 'none'}, 
+                children=','.join(plotter.available_dates)),
+        
+        # Auto-refresh interval (5 minutes = 300000 ms)
+        dcc.Interval(
+            id='auto-refresh-interval',
+            interval=300000,  # in milliseconds
+            n_intervals=0
+        ),
+        
+        # Header with futuristic styling
         html.Div([
-            html.Label("Select Date:"),
-            dcc.Dropdown(
-                id='date-dropdown',
-                options=[{'label': date, 'value': date} for date in plotter.available_dates],
-                value=plotter.selected_date,
-                style={'width': '200px'}
+            html.H1(f"{TICKER} ULTRON ANALYSIS", 
+                   style={
+                       'textAlign': 'center',
+                       'color': '#00FFFF',
+                       'fontFamily': 'monospace',
+                       'letterSpacing': '3px',
+                       'textShadow': '0 0 10px #00FFFF',
+                       'marginBottom': '20px',
+                       'paddingTop': '20px'
+                   }),
+            
+            # Date navigation with back button and current date display
+            html.Div([
+                html.Button('◀ PREV', id='prev-date-button', 
+                           style={
+                               'backgroundColor': '#000040',
+                               'color': '#00FFFF',
+                               'border': '1px solid #00FFFF',
+                               'borderRadius': '5px',
+                               'padding': '10px 15px',
+                               'marginRight': '15px',
+                               'cursor': 'pointer',
+                               'boxShadow': '0 0 5px #00FFFF'
+                           }),
+                html.Div(id='current-date-display', 
+                        children=f"DATE: {plotter.selected_date}",
+                        style={
+                            'color': '#00FFFF',
+                            'fontFamily': 'monospace',
+                            'fontSize': '18px',
+                            'padding': '10px 20px',
+                            'border': '1px solid #00FFFF',
+                            'borderRadius': '5px',
+                            'backgroundColor': '#000040',
+                            'boxShadow': '0 0 5px #00FFFF'
+                        }),
+                html.Button('REFRESH', id='refresh-button', n_clicks=0, 
+                           style={
+                               'backgroundColor': '#000040',
+                               'color': '#00FFFF',
+                               'border': '1px solid #00FFFF',
+                               'borderRadius': '5px',
+                               'padding': '10px 15px',
+                               'marginLeft': '15px',
+                               'cursor': 'pointer',
+                               'boxShadow': '0 0 5px #00FFFF'
+                           }),
+                html.Div(id='auto-refresh-indicator',
+                        children="AUTO-REFRESH: ACTIVE",
+                        style={
+                            'color': '#00FFFF',
+                            'fontFamily': 'monospace',
+                            'fontSize': '14px',
+                            'padding': '5px 10px',
+                            'marginLeft': '15px',
+                            'border': '1px solid #00FFFF',
+                            'borderRadius': '5px',
+                            'backgroundColor': '#000040',
+                            'boxShadow': '0 0 5px #00FFFF'
+                        })
+            ], style={
+                'display': 'flex', 
+                'alignItems': 'center', 
+                'justifyContent': 'center',
+                'marginBottom': '20px'
+            }),
+        ], style={
+            'backgroundColor': '#000020',
+            'padding': '10px',
+            'borderBottom': '2px solid #00FFFF',
+            'boxShadow': '0 5px 15px rgba(0, 255, 255, 0.3)'
+        }),
+        
+        # Main content area
+        html.Div([
+            # Candlestick chart
+            dcc.Graph(
+                id='candlestick-chart', 
+                figure=plotter.create_figure(),
+                style={
+                    'backgroundColor': '#000020',
+                    'borderRadius': '10px',
+                    'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)',
+                    'marginBottom': '20px'
+                }
             ),
-            html.Button('Refresh Data', id='refresh-button', n_clicks=0, 
-                       style={'marginLeft': '10px'}),
-            html.Button('Load More Dates', id='more-dates-button', n_clicks=0,
-                       style={'marginLeft': '10px'})
-        ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '20px'}),
-        
-        # Candlestick chart
-        dcc.Graph(id='candlestick-chart', figure=plotter.create_figure()),
-        
-        # Trade summary and statistics
-        html.Div([
-            html.Div(id='trade-summary', children=plotter.create_summary_stats()),
-            html.Div(id='trade-table', children=plotter.create_trades_table())
-        ])
-    ])
+            
+            # Trade summary and statistics
+            html.Div([
+                html.Div(id='trade-summary', 
+                        children=plotter.create_summary_stats(),
+                        style={
+                            'width': '48%',
+                            'backgroundColor': '#000020',
+                            'borderRadius': '10px',
+                            'padding': '15px',
+                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
+                        }),
+                html.Div(id='trade-table', 
+                        children=plotter.create_trades_table(),
+                        style={
+                            'width': '48%',
+                            'backgroundColor': '#000020',
+                            'borderRadius': '10px',
+                            'padding': '15px',
+                            'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
+                        })
+            ], style={
+                'display': 'flex',
+                'justifyContent': 'space-between',
+                'marginBottom': '20px'
+            })
+        ], style={
+            'padding': '20px',
+            'backgroundColor': '#000010'
+        })
+    ], style={
+        'backgroundColor': '#000010',
+        'minHeight': '100vh',
+        'fontFamily': 'monospace'
+    })
     
-    # Define callback for date selection
+    # Callback to update the current date display
+    @app.callback(
+        Output('current-date-display', 'children'),
+        [Input('current-date-index', 'children'),
+         Input('available-dates-store', 'children')]
+    )
+    def update_date_display(current_index, available_dates_str):
+        available_dates = available_dates_str.split(',')
+        current_index = int(current_index)
+        
+        if current_index < 0 or current_index >= len(available_dates):
+            current_index = len(available_dates) - 1
+            
+        selected_date = available_dates[current_index]
+        return f"DATE: {selected_date}"
+    
+    # Callback for previous date button
+    @app.callback(
+        [Output('current-date-index', 'children'),
+         Output('available-dates-store', 'children')],
+        [Input('prev-date-button', 'n_clicks'),
+         Input('refresh-button', 'n_clicks'),
+         Input('auto-refresh-interval', 'n_intervals')],
+        [State('current-date-index', 'children'),
+         State('available-dates-store', 'children')]
+    )
+    def navigate_dates(prev_clicks, refresh_clicks, n_intervals, current_index, available_dates_str):
+        ctx = dash.callback_context
+        
+        if not ctx.triggered:
+            raise PreventUpdate
+            
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        available_dates = available_dates_str.split(',')
+        current_index = int(current_index)
+        
+        if trigger_id == 'prev-date-button' and prev_clicks:
+            # Move to previous date
+            if current_index < len(available_dates) - 1:
+                current_index += 1
+        elif trigger_id in ['refresh-button', 'auto-refresh-interval']:
+            # Refresh available dates
+            plotter.available_dates = get_available_dates(plotter.days)
+            available_dates = plotter.available_dates
+            # If we're viewing today (index 0), stay there
+            if current_index == 0:
+                current_index = 0
+                
+        return str(current_index), ','.join(available_dates)
+    
+    # Define callback for chart updates
     @app.callback(
         [Output('candlestick-chart', 'figure'),
          Output('trade-summary', 'children'),
-         Output('trade-table', 'children'),
-         Output('date-dropdown', 'options')],
-        [Input('date-dropdown', 'value'),
-         Input('refresh-button', 'n_clicks')],
-        [State('date-dropdown', 'options')]
+         Output('trade-table', 'children')],
+        [Input('current-date-index', 'children'),
+         Input('refresh-button', 'n_clicks'),
+         Input('auto-refresh-interval', 'n_intervals')],
+        [State('available-dates-store', 'children')]
     )
-    def update_chart(selected_date, n_clicks, current_options):
-        # Refresh available dates to ensure we have today's data
-        plotter.available_dates = get_available_dates(plotter.days)
+    def update_chart(current_index, n_clicks, n_intervals, available_dates_str):
+        available_dates = available_dates_str.split(',')
+        current_index = int(current_index)
+        
+        if current_index < 0 or current_index >= len(available_dates):
+            current_index = 0
+            
+        selected_date = available_dates[current_index]
         
         # Analyze data for the selected date
         plotter.analyze_data(selected_date)
@@ -433,27 +668,41 @@ def create_dash_app():
         summary = plotter.create_summary_stats()
         table = plotter.create_trades_table()
         
-        # Update dropdown options with refreshed dates
-        date_options = [{'label': date, 'value': date} for date in plotter.available_dates]
-        
-        return fig, summary, table, date_options
+        return fig, summary, table
     
-    # Define callback for loading more dates
+    # Callback to update the auto-refresh indicator
     @app.callback(
-        Output('date-dropdown', 'options'),
-        [Input('more-dates-button', 'n_clicks')],
-        [State('date-dropdown', 'value')]
+        Output('auto-refresh-indicator', 'style'),
+        [Input('auto-refresh-interval', 'n_intervals')]
     )
-    def load_more_dates(n_clicks, current_value):
-        if n_clicks > 0:
-            # Load more dates
-            plotter.load_more_dates()
-            
-            # Update dropdown options
-            return [{'label': date, 'value': date} for date in plotter.available_dates]
-        
-        # Return current options if button not clicked
-        return [{'label': date, 'value': date} for date in plotter.available_dates]
+    def update_refresh_indicator(n_intervals):
+        # Flash the indicator when refreshing
+        if n_intervals % 2 == 0:
+            return {
+                'color': '#00FFFF',
+                'fontFamily': 'monospace',
+                'fontSize': '14px',
+                'padding': '5px 10px',
+                'marginLeft': '15px',
+                'border': '1px solid #00FFFF',
+                'borderRadius': '5px',
+                'backgroundColor': '#000080',  # Highlight color
+                'boxShadow': '0 0 10px #00FFFF',
+                'transition': 'all 0.5s ease'
+            }
+        else:
+            return {
+                'color': '#00FFFF',
+                'fontFamily': 'monospace',
+                'fontSize': '14px',
+                'padding': '5px 10px',
+                'marginLeft': '15px',
+                'border': '1px solid #00FFFF',
+                'borderRadius': '5px',
+                'backgroundColor': '#000040',
+                'boxShadow': '0 0 5px #00FFFF',
+                'transition': 'all 0.5s ease'
+            }
     
     return app
 
