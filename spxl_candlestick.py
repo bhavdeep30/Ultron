@@ -812,23 +812,28 @@ def create_dash_app():
                 loading_message          # Loading message
             )
         except Exception as e:
-            # If there's an error, show error message and keep ticker selection visible
-            error_message = [
-                html.Div(f"ERROR: {str(e)}", 
+            # Log the error to console but don't show it in the UI
+            print(f"ERROR: {str(e)}")
+        
+            # Show a generic message instead of the specific error
+            loading_message = [
+                html.Div("INITIALIZING DATA ANALYSIS...", 
                         style={
-                            'color': '#FF3333',
+                            'color': '#00FF00',
                             'textAlign': 'center',
                             'fontFamily': 'monospace',
                             'fontSize': '16px',
-                            'marginTop': '20px'
+                            'marginTop': '20px',
+                            'animation': 'pulse 1s infinite'
                         })
             ]
+        
             return (
                 {'display': 'block'},    # Keep ticker selection visible
                 {'display': 'none'},     # Hide main app
                 [],                      # Empty main app
                 ticker,                  # Store ticker value
-                error_message            # Error message
+                loading_message          # Loading message (generic, not error)
             )
     
     # Callback to go back to ticker selection
