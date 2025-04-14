@@ -406,7 +406,7 @@ class DashPlotter:
         for trade in self.trades:
             row = html.Tr([
                 html.Td(f"{format_time_mst(trade['entry_time'])} → {format_time_mst(trade['exit_time'])}", 
-                       style={'fontSize': '14px'}),
+                       style={'fontSize': '18px'}),
                 html.Td(f"${trade['entry_price']:.2f} → ${trade['exit_price']:.2f}", 
                        style={'fontSize': '16px'}),
                 html.Td(f"${trade['profit']:.2f}", 
