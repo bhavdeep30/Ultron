@@ -318,7 +318,6 @@ class DashPlotter:
         # Update layout with futuristic dark theme
         fig.update_layout(
             title=f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date} (MST)',
-            xaxis_title='Time',
             yaxis_title='Price ($)',
             height=800,
             xaxis_rangeslider_visible=False,
@@ -353,15 +352,32 @@ class DashPlotter:
             zerolinecolor="#0F3460",
             tickfont=dict(color="#00FFFF")
         )
+        # Get hourly ticks only
+        mst = pytz.timezone('US/Mountain')
+        hourly_ticks = []
+        hourly_labels = []
+        
+        for dt in self.df.index:
+            # Convert to MST
+            if dt.tzinfo is None:
+                dt_mst = pytz.utc.localize(dt).astimezone(mst)
+            else:
+                dt_mst = dt.astimezone(mst)
+                
+            # If this is on the hour (00 minutes), add it to hourly ticks
+            if dt_mst.minute == 0:
+                hourly_ticks.append(dt)
+                hourly_labels.append(format_time_mst(dt).replace(' MST', ''))
+        
         fig.update_xaxes(
             gridcolor="#0F3460",
             zerolinecolor="#0F3460",
             tickfont=dict(color="#00FFFF"),
             tickformat='%I:%M %p',  # 12-hour format
             hoverformat='%I:%M %p MST',  # 12-hour format with MST for hover
-            # Convert datetime to MST timezone for x-axis
-            tickvals=self.df.index,
-            ticktext=[format_time_mst(dt).replace(' MST', '') for dt in self.df.index]
+            # Use only hourly ticks
+            tickvals=hourly_ticks,
+            ticktext=hourly_labels
         )
         
         return fig
