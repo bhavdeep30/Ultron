@@ -892,7 +892,7 @@ def create_dash_app():
                 current_index -= 1
         elif trigger_id in ['refresh-button', 'auto-refresh-interval']:
             # Refresh available dates with newest first
-            available_dates = get_available_dates(ticker, int(plotter.days) if hasattr(plotter, 'days') else 7)
+            available_dates = get_available_dates(ticker, 7)
             
             # If we're viewing today (index 0), stay there after refresh
             if current_index == 0:
@@ -900,8 +900,8 @@ def create_dash_app():
             # Otherwise, try to find the date we were viewing in the new list
             else:
                 old_date = available_dates_str.split(',')[current_index]
-                if old_date in plotter.available_dates:
-                    current_index = plotter.available_dates.index(old_date)
+                if old_date in available_dates:
+                    current_index = available_dates.index(old_date)
                 else:
                     # If date not found, reset to most recent
                     current_index = 0
@@ -979,6 +979,6 @@ def create_dash_app():
 # Run the app
 if __name__ == "__main__":
     app = create_dash_app()
-    print(f"Starting Dash server for {TICKER} candlestick analysis...")
+    print("Starting Dash server for candlestick analysis...")
     print("Open your web browser and navigate to http://127.0.0.1:8050/")
     app.run(debug=True, use_reloader=False)
