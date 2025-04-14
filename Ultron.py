@@ -655,7 +655,7 @@ def create_dash_app():
             'maxWidth': '800px',
             'margin': '0 auto',
             'position': 'absolute',
-            'top': '50%',
+            'top': '33%',
             'left': '50%',
             'transform': 'translate(-50%, -50%)'
         })
