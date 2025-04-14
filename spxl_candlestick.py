@@ -616,9 +616,10 @@ def create_dash_app():
         'fontFamily': 'monospace'
     })
     
-    # Callback to update the current date display
+    # Callback to update the current date display and next button style
     @app.callback(
-        Output('current-date-display', 'children'),
+        [Output('current-date-display', 'children'),
+         Output('next-date-button', 'style')],
         [Input('current-date-index', 'children'),
          Input('available-dates-store', 'children')]
     )
@@ -630,7 +631,33 @@ def create_dash_app():
             current_index = len(available_dates) - 1
             
         selected_date = available_dates[current_index]
-        return f"DATE: {selected_date}"
+        
+        # Determine if we're on the most recent date (index 0)
+        # If so, disable the next button by graying it out
+        if current_index == 0:
+            next_button_style = {
+                'backgroundColor': '#000020',  # Darker background for disabled
+                'color': '#336666',  # Muted color for disabled
+                'border': '1px solid #336666',
+                'borderRadius': '5px',
+                'padding': '10px 15px',
+                'marginLeft': '15px',
+                'cursor': 'not-allowed',  # Change cursor to indicate disabled
+                'opacity': '0.5'  # Reduce opacity for disabled
+            }
+        else:
+            next_button_style = {
+                'backgroundColor': '#000040',
+                'color': '#00FFFF',
+                'border': '1px solid #00FFFF',
+                'borderRadius': '5px',
+                'padding': '10px 15px',
+                'marginLeft': '15px',
+                'cursor': 'pointer',
+                'boxShadow': '0 0 5px #00FFFF'
+            }
+            
+        return f"DATE: {selected_date}", next_button_style
     
     # Callback for date navigation buttons
     @app.callback(
@@ -688,10 +715,11 @@ def create_dash_app():
          Output('trade-table', 'children')],
         [Input('current-date-index', 'children'),
          Input('refresh-button', 'n_clicks'),
-         Input('auto-refresh-interval', 'n_intervals')],
+         Input('auto-refresh-interval', 'n_intervals'),
+         Input('next-date-button', 'n_clicks')],  # Add next button to trigger refresh
         [State('available-dates-store', 'children')]
     )
-    def update_chart(current_index, n_clicks, n_intervals, available_dates_str):
+    def update_chart(current_index, n_clicks, n_intervals, next_clicks, available_dates_str):
         available_dates = available_dates_str.split(',')
         current_index = int(current_index)
         
