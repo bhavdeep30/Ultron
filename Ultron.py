@@ -834,7 +834,7 @@ def create_dash_app():
                                 style={
                                     'color': '#00FFFF',
                                     'fontFamily': 'monospace',
-                                    'fontSize': '14px',
+                                    'fontSize': '18px',
                                     'padding': '5px 10px',
                                     'marginLeft': '15px',
                                     'border': '1px solid #00FFFF',
@@ -1117,7 +1117,7 @@ def create_dash_app():
             return {
                 'color': '#00FFFF',
                 'fontFamily': 'monospace',
-                'fontSize': '14px',
+                'fontSize': '18px',
                 'padding': '5px 10px',
                 'marginLeft': '15px',
                 'border': '1px solid #00FFFF',
@@ -1130,7 +1130,7 @@ def create_dash_app():
             return {
                 'color': '#00FFFF',
                 'fontFamily': 'monospace',
-                'fontSize': '14px',
+                'fontSize': '18px',
                 'padding': '5px 10px',
                 'marginLeft': '15px',
                 'border': '1px solid #00FFFF',
