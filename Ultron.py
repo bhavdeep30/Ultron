@@ -584,17 +584,8 @@ def create_dash_app():
                            'fontFamily': 'monospace',
                            'letterSpacing': '1px',
                            'textShadow': '0 0 10px #00FFFF',
-                           'marginBottom': '5px',
-                           'paddingTop': '40px'
-                       }),
-                html.H1("TRADE", 
-                       style={
-                           'textAlign': 'center',
-                           'color': '#00FFFF',
-                           'fontFamily': 'monospace',
-                           'letterSpacing': '1px',
-                           'textShadow': '0 0 10px #00FFFF',
                            'marginBottom': '40px',
+                           'paddingTop': '40px'
                        }),
             ]),
             
@@ -775,17 +766,8 @@ def create_dash_app():
                                    'fontFamily': 'monospace',
                                    'letterSpacing': '1px',
                                    'textShadow': '0 0 10px #00FFFF',
-                                   'marginBottom': '5px',
-                                   'paddingTop': '20px'
-                               }),
-                        html.H1("TRADE", 
-                               style={
-                                   'textAlign': 'center',
-                                   'color': '#00FFFF',
-                                   'fontFamily': 'monospace',
-                                   'letterSpacing': '1px',
-                                   'textShadow': '0 0 10px #00FFFF',
                                    'marginBottom': '20px',
+                                   'paddingTop': '20px'
                                }),
                     ]),
             
