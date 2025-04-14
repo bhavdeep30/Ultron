@@ -12,9 +12,9 @@ from dash.dependencies import Input, Output, State
 TICKER = "SPXL"
 
 def get_available_dates(days=7):
-    """Get a list of available trading dates for the past n days"""
+    """Get a list of available trading dates for the past n days including today"""
     # Get data for the past n+5 days (to account for weekends and holidays)
-    end_date = datetime.datetime.now()
+    end_date = datetime.datetime.now() + datetime.timedelta(days=1)  # Add 1 day to include today
     start_date = end_date - datetime.timedelta(days=days+5)
     
     # Download daily data to get available trading days
@@ -22,6 +22,15 @@ def get_available_dates(days=7):
     
     # Get the last n trading days
     available_dates = daily_data.index[-days:].strftime('%Y-%m-%d').tolist()
+    
+    # Ensure today's date is included if market is open
+    today_str = datetime.datetime.now().strftime('%Y-%m-%d')
+    if today_str not in available_dates and datetime.datetime.now().weekday() < 5:  # Weekday check
+        # Check if we have data for today
+        today_data = yf.download(TICKER, start=today_str, end=None, interval="1d")
+        if not today_data.empty:
+            available_dates.append(today_str)
+    
     return available_dates
 
 class DashPlotter:
@@ -42,7 +51,15 @@ class DashPlotter:
         # Download 5-minute interval data for the selected trading day
         # Use a 2-day period to ensure we get the full trading day
         start_date = pd.to_datetime(self.selected_date)
-        end_date = start_date + datetime.timedelta(days=1)
+        
+        # If analyzing today's data, use current time as end_date to get latest data
+        today_str = datetime.datetime.now().strftime('%Y-%m-%d')
+        if self.selected_date == today_str:
+            end_date = datetime.datetime.now() + datetime.timedelta(hours=1)  # Add buffer for latest data
+            print("Fetching real-time data for today...")
+        else:
+            end_date = start_date + datetime.timedelta(days=1)
+            
         self.df = yf.download(TICKER, start=start_date, end=end_date, interval="5m", auto_adjust=False, group_by='ticker')
         
         # Check if we got any data
@@ -398,11 +415,16 @@ def create_dash_app():
     @app.callback(
         [Output('candlestick-chart', 'figure'),
          Output('trade-summary', 'children'),
-         Output('trade-table', 'children')],
+         Output('trade-table', 'children'),
+         Output('date-dropdown', 'options')],
         [Input('date-dropdown', 'value'),
-         Input('refresh-button', 'n_clicks')]
+         Input('refresh-button', 'n_clicks')],
+        [State('date-dropdown', 'options')]
     )
-    def update_chart(selected_date, n_clicks):
+    def update_chart(selected_date, n_clicks, current_options):
+        # Refresh available dates to ensure we have today's data
+        plotter.available_dates = get_available_dates(plotter.days)
+        
         # Analyze data for the selected date
         plotter.analyze_data(selected_date)
         
@@ -411,7 +433,10 @@ def create_dash_app():
         summary = plotter.create_summary_stats()
         table = plotter.create_trades_table()
         
-        return fig, summary, table
+        # Update dropdown options with refreshed dates
+        date_options = [{'label': date, 'value': date} for date in plotter.available_dates]
+        
+        return fig, summary, table, date_options
     
     # Define callback for loading more dates
     @app.callback(
