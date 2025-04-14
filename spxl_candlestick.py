@@ -68,6 +68,7 @@ class DashPlotter:
         self.available_dates = get_available_dates(ticker, days)
         self.selected_date = self.available_dates[0] if self.available_dates else datetime.datetime.now().strftime('%Y-%m-%d')
         self.trades = []
+        self.all_trades = {}  # Dictionary to store trades for all dates
         self.df = None
         
     def analyze_data(self, date_str=None):
@@ -467,6 +468,66 @@ class DashPlotter:
                      'borderRadius': '10px', 'boxShadow': '0 0 5px #00FFFF'})
         ], style={'padding': '10px'})
     
+    def create_multi_day_summary(self):
+        """Create a summary statistics component for all analyzed dates"""
+        # Analyze all dates if not already done
+        if not self.all_trades:
+            self.analyze_all_dates()
+            
+        # If still no trades, return a message
+        if not self.all_trades:
+            return html.Div("No trades found across all dates", 
+                           style={'color': '#00FFFF', 'textAlign': 'center', 'padding': '20px'})
+        
+        # Flatten all trades into a single list
+        all_trades_list = []
+        for date_trades in self.all_trades.values():
+            all_trades_list.extend(date_trades)
+            
+        # Calculate statistics
+        total_trades = len(all_trades_list)
+        total_profit_pct = sum(trade['profit_pct'] for trade in all_trades_list)
+        winning_trades = sum(1 for trade in all_trades_list if trade['profit'] > 0)
+        win_rate = (winning_trades / total_trades) * 100 if total_trades > 0 else 0
+        
+        # Create a breakdown by date
+        date_breakdown = []
+        for date, trades in self.all_trades.items():
+            date_profit_pct = sum(trade['profit_pct'] for trade in trades)
+            date_win_rate = sum(1 for trade in trades if trade['profit'] > 0) / len(trades) * 100 if trades else 0
+            
+            date_breakdown.append(html.Li([
+                f"{date}: ",
+                html.Span(f"{date_profit_pct:.2f}%", 
+                          style={'color': '#00FF00' if date_profit_pct > 0 else '#FF3333'}),
+                f" ({len(trades)} trades, {date_win_rate:.1f}% win rate)"
+            ], style={'color': '#00FFFF', 'marginBottom': '5px'}))
+        
+        return html.Div([
+            html.H4(f"Multi-Day Trading Summary for {self.ticker}", 
+                   style={'color': '#00FFFF', 'textAlign': 'center', 'marginBottom': '15px'}),
+            html.Ul([
+                html.Li(f"Total days analyzed: {len(self.all_trades)}", 
+                       style={'color': '#00FFFF', 'marginBottom': '8px'}),
+                html.Li(f"Total trades: {total_trades}", 
+                       style={'color': '#00FFFF', 'marginBottom': '8px'}),
+                html.Li([
+                    "Total profit across all days: ",
+                    html.Span(f"{total_profit_pct:.2f}%", 
+                              style={'color': '#00FF00' if total_profit_pct > 0 else '#FF3333'})
+                ], style={'marginBottom': '8px'}),
+                html.Li(f"Overall win rate: {win_rate:.2f}% ({winning_trades}/{total_trades})", 
+                       style={'color': '#00FFFF', 'marginBottom': '15px'})
+            ], style={'listStyleType': 'none', 'padding': '15px', 'backgroundColor': '#000030', 
+                     'borderRadius': '10px', 'boxShadow': '0 0 5px #00FFFF', 'marginBottom': '15px'}),
+            
+            html.H5("Daily Breakdown:", 
+                   style={'color': '#00FFFF', 'marginBottom': '10px', 'marginLeft': '15px'}),
+            html.Ul(date_breakdown, 
+                   style={'listStyleType': 'none', 'padding': '15px', 'backgroundColor': '#000030', 
+                          'borderRadius': '10px', 'boxShadow': '0 0 5px #00FFFF'})
+        ], style={'padding': '10px'})
+    
     def load_more_dates(self, days=None):
         """Load more historical dates"""
         if days is None:
@@ -474,6 +535,31 @@ class DashPlotter:
         self.days = days
         self.available_dates = get_available_dates(self.ticker, days)
         return self.available_dates
+        
+    def analyze_all_dates(self):
+        """Analyze data for all available dates and store the trades"""
+        print(f"Analyzing all available dates for {self.ticker}...")
+        
+        # Store the current selected date to restore it later
+        current_date = self.selected_date
+        
+        # Analyze each date and store the trades
+        for date_str in self.available_dates:
+            # Skip if we've already analyzed this date
+            if date_str in self.all_trades:
+                continue
+                
+            # Analyze the date
+            self.analyze_data(date_str)
+            
+            # Store the trades for this date
+            if self.trades:
+                self.all_trades[date_str] = self.trades.copy()
+        
+        # Restore the originally selected date
+        self.analyze_data(current_date)
+        
+        return self.all_trades
 
 # Create the Dash app
 def create_dash_app():
@@ -793,7 +879,19 @@ def create_dash_app():
                         'display': 'flex',
                         'justifyContent': 'space-between',
                         'marginBottom': '20px'
-                    })
+                    }),
+                    
+                    # Multi-day summary
+                    html.Div(id='multi-day-summary',
+                            children=plotter.create_multi_day_summary(),
+                            style={
+                                'width': '100%',
+                                'backgroundColor': '#000020',
+                                'borderRadius': '10px',
+                                'padding': '15px',
+                                'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)',
+                                'marginBottom': '20px'
+                            })
                 ], style={
                     'padding': '20px',
                     'backgroundColor': '#000010'
@@ -946,7 +1044,8 @@ def create_dash_app():
     @app.callback(
         [Output('candlestick-chart', 'figure'),
          Output('trade-summary', 'children'),
-         Output('trade-table', 'children')],
+         Output('trade-table', 'children'),
+         Output('multi-day-summary', 'children')],
         [Input('current-date-index', 'children'),
          Input('refresh-button', 'n_clicks'),
          Input('auto-refresh-interval', 'n_intervals'),
@@ -965,14 +1064,20 @@ def create_dash_app():
         
         # Create a plotter for the current ticker and analyze data
         plotter = DashPlotter(ticker=ticker)
+        
+        # Analyze the current date
         plotter.analyze_data(selected_date)
         
-        # Create the figure and trade information
+        # Create the figure and trade information for current date
         fig = plotter.create_figure()
         summary = plotter.create_summary_stats()
         table = plotter.create_trades_table()
         
-        return fig, summary, table
+        # Analyze all dates in the background and create multi-day summary
+        # This will populate plotter.all_trades
+        multi_day_summary = plotter.create_multi_day_summary()
+        
+        return fig, summary, table, multi_day_summary
     
     # Callback to update the auto-refresh indicator
     @app.callback(
