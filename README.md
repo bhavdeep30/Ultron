@@ -22,4 +22,4 @@
     
 7. Run: `python Ultron.py`
 
-8. Open browser: http://127.0.0.1:8050/
+8. Open in web browser: http://127.0.0.1:8050/
