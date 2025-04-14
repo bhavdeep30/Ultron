@@ -62,7 +62,7 @@ def format_time_mst(dt):
     return dt_mst.strftime('%I:%M %p MST')
 
 class DashPlotter:
-    def __init__(self, ticker="SPXL", days=7):
+    def __init__(self, ticker="SQQQ", days=7):
         self.ticker = ticker
         self.days = days
         self.available_dates = get_available_dates(ticker, days)
@@ -601,7 +601,7 @@ def create_dash_app():
                 dcc.Input(
                     id='ticker-input',
                     type='text',
-                    value='SPXL',
+                    value='SQQQ',
                     style={
                         'backgroundColor': '#000040',
                         'color': '#00FFFF',
@@ -671,7 +671,7 @@ def create_dash_app():
     
     # Combine layouts
     app.layout = html.Div([
-        dcc.Store(id='ticker-store', data='SPXL'),
+        dcc.Store(id='ticker-store', data='SQQQ'),
         # Auto-refresh interval (5 minutes = 300000 ms) - moved to top level
         dcc.Interval(
             id='auto-refresh-interval',
