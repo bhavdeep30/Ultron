@@ -483,7 +483,8 @@ def create_dash_app():
         external_stylesheets=[dbc.themes.CYBORG],
         meta_tags=[
             {"name": "viewport", "content": "width=device-width, initial-scale=1"}
-        ]
+        ],
+        suppress_callback_exceptions=True
     )
     
     # Define the ticker selection layout
@@ -578,6 +579,12 @@ def create_dash_app():
     # Combine layouts
     app.layout = html.Div([
         dcc.Store(id='ticker-store', data='SPXL'),
+        # Auto-refresh interval (5 minutes = 300000 ms) - moved to top level
+        dcc.Interval(
+            id='auto-refresh-interval',
+            interval=300000,  # in milliseconds
+            n_intervals=0
+        ),
         html.Div(id='ticker-selection-container', children=ticker_selection_layout),
         main_app_layout
     ])
@@ -645,12 +652,6 @@ def create_dash_app():
                 html.Div(id='available-dates-store', style={'display': 'none'}, 
                         children=','.join(plotter.available_dates)),
         
-                # Auto-refresh interval (5 minutes = 300000 ms)
-                dcc.Interval(
-                    id='auto-refresh-interval',
-                    interval=300000,  # in milliseconds
-                    n_intervals=0
-                ),
         
                 # Header with futuristic styling
                 html.Div([
