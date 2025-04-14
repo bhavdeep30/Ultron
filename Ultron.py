@@ -266,10 +266,14 @@ class DashPlotter:
             buy_indices = self.df[self.df['Buy_Signal']].index
             buy_prices = self.df.loc[buy_indices, 'Close']
             
+            # Offset the buy signals upward by 0.5% of the price
+            buy_offset = buy_prices * 0.005
+            buy_y_positions = buy_prices + buy_offset
+            
             fig.add_trace(
                 go.Scatter(
                     x=buy_indices,
-                    y=buy_prices,
+                    y=buy_y_positions,
                     mode='markers',
                     marker=dict(
                         symbol='triangle-up',
@@ -287,10 +291,14 @@ class DashPlotter:
             sell_indices = self.df[self.df['Sell_Signal']].index
             sell_prices = self.df.loc[sell_indices, 'Close']
             
+            # Offset the sell signals downward by 0.5% of the price
+            sell_offset = sell_prices * 0.005
+            sell_y_positions = sell_prices - sell_offset
+            
             fig.add_trace(
                 go.Scatter(
                     x=sell_indices,
-                    y=sell_prices,
+                    y=sell_y_positions,
                     mode='markers',
                     marker=dict(
                         symbol='triangle-down',
