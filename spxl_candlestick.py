@@ -521,14 +521,14 @@ def create_dash_app():
                         }),
                 html.Button('NEXT ▶', id='next-date-button', 
                            style={
-                               'backgroundColor': '#000040',
-                               'color': '#00FFFF',
-                               'border': '1px solid #00FFFF',
+                               'backgroundColor': '#000020',  # Darker background for disabled
+                               'color': '#336666',  # Muted color for disabled
+                               'border': '1px solid #336666',
                                'borderRadius': '5px',
                                'padding': '10px 15px',
                                'marginLeft': '15px',
-                               'cursor': 'pointer',
-                               'boxShadow': '0 0 5px #00FFFF'
+                               'cursor': 'not-allowed',  # Change cursor to indicate disabled
+                               'opacity': '0.5'  # Reduce opacity for disabled
                            }),
                 html.Button('REFRESH', id='refresh-button', n_clicks=0, 
                            style={
