@@ -615,7 +615,7 @@ def create_dash_app():
                         'boxShadow': '0 0 10px #00FFFF'
                     }
                 ),
-                html.Button('ANALYZE', id='analyze-button', n_clicks=0,
+                html.Button('TRADE', id='analyze-button', n_clicks=0,
                            style={
                                'backgroundColor': '#000080',
                                'color': '#00FFFF',
