@@ -637,7 +637,7 @@ def create_dash_app():
             }),
             
             html.Div(id='loading-message', children=[
-                html.Div("READY TO ANALYZE", 
+                html.Div("READY TO TRADE", 
                         style={
                             'color': '#00FFFF',
                             'textAlign': 'center',
@@ -700,7 +700,7 @@ def create_dash_app():
                 {'display': 'none'},   # Hide main app
                 [],                    # Empty main app
                 'SPXL',                # Default ticker
-                [html.Div("READY TO ANALYZE", 
+                [html.Div("READY TO TRADE", 
                          style={
                              'color': '#00FFFF',
                              'textAlign': 'center',
