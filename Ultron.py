@@ -600,7 +600,10 @@ def create_dash_app():
                             'textShadow': '0 0 20px #00FFFF',
                             'marginBottom': '60px',
                             'paddingTop': '60px',
-                            'fontSize': '72px'
+                            'fontSize': '72px',
+                            'width': '100%',
+                            'display': 'flex',
+                            'justifyContent': 'center'
                        }),
             ]),
             
@@ -659,7 +662,10 @@ def create_dash_app():
                             'fontFamily': 'monospace',
                             'fontSize': '24px',
                             'marginTop': '30px',
-                            'animation': 'pulse 2s infinite'
+                            'animation': 'pulse 2s infinite',
+                            'width': '100%',
+                            'display': 'flex',
+                            'justifyContent': 'center'
                         })
             ])
         ], style={
