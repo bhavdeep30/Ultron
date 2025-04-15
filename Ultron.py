@@ -591,17 +591,16 @@ def create_dash_app():
     ticker_selection_layout = html.Div([
         html.Div([
             html.Div([
-                html.H1("ULTRON", 
-                       style={
-                           'textAlign': 'center',
-                           'color': '#00FFFF',
-                           'fontFamily': 'monospace',
-                           'letterSpacing': '8px',
-                           'textShadow': '0 0 25px #00FFFF',
-                           'marginBottom': '60px',
-                           'paddingTop': '60px',
-                           'fontSize': '96px',
-                           'fontWeight': 'bold'
+                html.H1("ULTRON",
+                        style={
+                            'textAlign': 'center',
+                            'color': '#00FFFF',
+                            'fontFamily': 'monospace',
+                            'letterSpacing': '5px',
+                            'textShadow': '0 0 20px #00FFFF',
+                            'marginBottom': '60px',
+                            'paddingTop': '60px',
+                            'fontSize': '72px'
                        }),
             ]),
             
@@ -787,15 +786,14 @@ def create_dash_app():
                     html.Div([
                         html.H1(f"{ticker} ULTRON", 
                                style={
-                                   'textAlign': 'center',
-                                   'color': '#00FFFF',
-                                   'fontFamily': 'monospace',
-                                   'letterSpacing': '5px',
-                                   'textShadow': '0 0 20px #00FFFF',
-                                   'marginBottom': '20px',
-                                   'paddingTop': '20px',
-                                   'fontSize': '60px',
-                                   'fontWeight': 'bold'
+                                    'textAlign': 'center',
+                                    'color': '#00FFFF',
+                                    'fontFamily': 'monospace',
+                                    'letterSpacing': '3px',
+                                    'textShadow': '0 0 15px #00FFFF',
+                                    'marginBottom': '20px',
+                                    'paddingTop': '20px',
+                                    'fontSize': '42px'
                                }),
                     ]),
             
