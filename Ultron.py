@@ -596,11 +596,12 @@ def create_dash_app():
                            'textAlign': 'center',
                            'color': '#00FFFF',
                            'fontFamily': 'monospace',
-                           'letterSpacing': '3px',
-                           'textShadow': '0 0 15px #00FFFF',
+                           'letterSpacing': '8px',
+                           'textShadow': '0 0 25px #00FFFF',
                            'marginBottom': '60px',
                            'paddingTop': '60px',
-                           'fontSize': '48px'
+                           'fontSize': '96px',
+                           'fontWeight': 'bold'
                        }),
             ]),
             
@@ -789,10 +790,12 @@ def create_dash_app():
                                    'textAlign': 'center',
                                    'color': '#00FFFF',
                                    'fontFamily': 'monospace',
-                                   'letterSpacing': '1px',
-                                   'textShadow': '0 0 10px #00FFFF',
+                                   'letterSpacing': '5px',
+                                   'textShadow': '0 0 20px #00FFFF',
                                    'marginBottom': '20px',
-                                   'paddingTop': '20px'
+                                   'paddingTop': '20px',
+                                   'fontSize': '60px',
+                                   'fontWeight': 'bold'
                                }),
                     ]),
             
