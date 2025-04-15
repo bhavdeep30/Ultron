@@ -603,7 +603,8 @@ def create_dash_app():
                             'fontSize': '72px',
                             'width': '100%',
                             'display': 'flex',
-                            'justifyContent': 'center'
+                            'justifyContent': 'center',
+                            'paddingLeft': '2px'
                        }),
             ]),
             
