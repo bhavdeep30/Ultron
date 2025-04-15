@@ -596,10 +596,11 @@ def create_dash_app():
                            'textAlign': 'center',
                            'color': '#00FFFF',
                            'fontFamily': 'monospace',
-                           'letterSpacing': '1px',
-                           'textShadow': '0 0 10px #00FFFF',
-                           'marginBottom': '40px',
-                           'paddingTop': '40px'
+                           'letterSpacing': '3px',
+                           'textShadow': '0 0 15px #00FFFF',
+                           'marginBottom': '60px',
+                           'paddingTop': '60px',
+                           'fontSize': '48px'
                        }),
             ]),
             
@@ -608,9 +609,9 @@ def create_dash_app():
                           style={
                               'color': '#00FFFF',
                               'fontFamily': 'monospace',
-                              'fontSize': '18px',
-                              'marginRight': '15px',
-                              'textShadow': '0 0 5px #00FFFF'
+                              'fontSize': '22px',
+                              'marginRight': '20px',
+                              'textShadow': '0 0 8px #00FFFF'
                           }),
                 dcc.Input(
                     id='ticker-input',
@@ -619,27 +620,27 @@ def create_dash_app():
                     style={
                         'backgroundColor': '#000040',
                         'color': '#00FFFF',
-                        'border': '2px solid #00FFFF',
-                        'borderRadius': '5px',
-                        'padding': '10px 15px',
-                        'fontSize': '18px',
-                        'width': '150px',
+                        'border': '3px solid #00FFFF',
+                        'borderRadius': '8px',
+                        'padding': '12px 20px',
+                        'fontSize': '22px',
+                        'width': '180px',
                         'textAlign': 'center',
                         'fontFamily': 'monospace',
-                        'boxShadow': '0 0 10px #00FFFF'
+                        'boxShadow': '0 0 15px #00FFFF'
                     }
                 ),
                 html.Button('TRADE', id='analyze-button', n_clicks=0,
                            style={
                                'backgroundColor': '#000080',
                                'color': '#00FFFF',
-                               'border': '2px solid #00FFFF',
-                               'borderRadius': '5px',
-                               'padding': '10px 20px',
-                               'marginLeft': '15px',
+                               'border': '3px solid #00FFFF',
+                               'borderRadius': '8px',
+                               'padding': '12px 25px',
+                               'marginLeft': '20px',
                                'cursor': 'pointer',
-                               'boxShadow': '0 0 10px #00FFFF',
-                               'fontSize': '18px',
+                               'boxShadow': '0 0 15px #00FFFF',
+                               'fontSize': '22px',
                                'fontFamily': 'monospace',
                                'fontWeight': 'bold'
                            })
@@ -647,7 +648,7 @@ def create_dash_app():
                 'display': 'flex',
                 'alignItems': 'center',
                 'justifyContent': 'center',
-                'marginBottom': '40px'
+                'marginBottom': '60px'
             }),
             
             html.Div(id='loading-message', children=[
@@ -656,28 +657,33 @@ def create_dash_app():
                             'color': '#00FF00',
                             'textAlign': 'center',
                             'fontFamily': 'monospace',
-                            'fontSize': '16px',
-                            'marginTop': '20px',
+                            'fontSize': '24px',
+                            'marginTop': '30px',
                             'animation': 'pulse 2s infinite'
                         })
             ])
         ], style={
             'backgroundColor': '#000020',
-            'padding': '40px',
-            'borderRadius': '15px',
-            'boxShadow': '0 0 30px rgba(0, 255, 255, 0.3)',
-            'maxWidth': '800px',
+            'padding': '60px',
+            'borderRadius': '20px',
+            'boxShadow': '0 0 40px rgba(0, 255, 255, 0.5)',
+            'maxWidth': '1000px',
+            'minHeight': '500px',
             'margin': '0 auto',
             'position': 'absolute',
-            'top': '33%',
+            'top': '50%',
             'left': '50%',
             'transform': 'translate(-50%, -50%)'
         })
     ], style={
         'backgroundColor': '#000010',
         'minHeight': '100vh',
+        'width': '100vw',
         'fontFamily': 'monospace',
-        'position': 'relative'
+        'position': 'relative',
+        'display': 'flex',
+        'justifyContent': 'center',
+        'alignItems': 'center'
     })
     
     # Define the main app layout (initially hidden)
