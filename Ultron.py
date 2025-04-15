@@ -62,7 +62,7 @@ def format_time_mst(dt):
     return dt_mst.strftime('%I:%M %p MST')
 
 class DashPlotter:
-    def __init__(self, ticker="SQQQ", days=7):
+    def __init__(self, ticker="AAPL", days=7):
         self.ticker = ticker
         self.days = days
         self.available_dates = get_available_dates(ticker, days)
@@ -604,7 +604,7 @@ def create_dash_app():
                             'width': '100%',
                             'display': 'flex',
                             'justifyContent': 'center',
-                            'paddingLeft': '2px'
+                            'paddingLeft': '25px'
                        }),
             ]),
             
@@ -620,7 +620,7 @@ def create_dash_app():
                 dcc.Input(
                     id='ticker-input',
                     type='text',
-                    value='SQQQ',
+                    value='AAPL',
                     style={
                         'backgroundColor': '#000040',
                         'color': '#00FFFF',
@@ -661,7 +661,7 @@ def create_dash_app():
                             'color': '#00FF00',
                             'textAlign': 'center',
                             'fontFamily': 'monospace',
-                            'fontSize': '24px',
+                            'fontSize': '20px',
                             'marginTop': '30px',
                             'animation': 'pulse 2s infinite',
                             'width': '100%',
@@ -698,7 +698,7 @@ def create_dash_app():
     
     # Combine layouts
     app.layout = html.Div([
-        dcc.Store(id='ticker-store', data='SQQQ'),
+        dcc.Store(id='ticker-store', data='AAPL'),
         # Auto-refresh interval (5 minutes = 300000 ms) - moved to top level
         dcc.Interval(
             id='auto-refresh-interval',
@@ -732,7 +732,7 @@ def create_dash_app():
                              'color': '#00FF00',
                              'textAlign': 'center',
                              'fontFamily': 'monospace',
-                             'fontSize': '16px',
+                             'fontSize': '20px',
                              'marginTop': '20px',
                              'animation': 'pulse 2s infinite'
                          })]
@@ -740,7 +740,7 @@ def create_dash_app():
         
         # Show loading message
         loading_message = [
-            html.Div("INITIALIZING DATA ANALYSIS...", 
+            html.Div("READY TO TRADE", 
                     style={
                         'color': '#00FF00',
                         'textAlign': 'center',
@@ -965,7 +965,7 @@ def create_dash_app():
         
             # Show a generic message instead of the specific error
             loading_message = [
-                html.Div("INITIALIZING DATA ANALYSIS...", 
+                html.Div("READY TO TRADE", 
                         style={
                             'color': '#00FF00',
                             'textAlign': 'center',
