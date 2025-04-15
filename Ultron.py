@@ -745,7 +745,7 @@ def create_dash_app():
                         'color': '#00FF00',
                         'textAlign': 'center',
                         'fontFamily': 'monospace',
-                        'fontSize': '16px',
+                        'fontSize': '20px',
                         'marginTop': '20px',
                         'animation': 'pulse 1s infinite'
                     })
@@ -970,7 +970,7 @@ def create_dash_app():
                             'color': '#00FF00',
                             'textAlign': 'center',
                             'fontFamily': 'monospace',
-                            'fontSize': '16px',
+                            'fontSize': '20px',
                             'marginTop': '20px',
                             'animation': 'pulse 1s infinite'
                         })
