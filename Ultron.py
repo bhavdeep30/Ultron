@@ -148,10 +148,26 @@ class DashPlotter:
         
         # Implement the trading strategy
         for i in range(6, len(self.df)):  # Start after 6MA is available
-            # If not in a position and we have a red candle that closes above 6MA
-            # Also check that we're not selling on this candle (which would happen if previous candle had a buy)
+            # Get current candle data
+            current_open = self.df['Open'].iloc[i]
+            current_close = self.df['Close'].iloc[i]
+            current_high = self.df['High'].iloc[i]
+            current_low = self.df['Low'].iloc[i]
+            
+            # Check for the specific candle pattern conditions:
+            # Condition 1: Red candle ((Close < Open) AND ((Close - Low) >= 2 * (Open - Close)) AND ((High - Open) <= (Open - Close)))
+            # Condition 2: Green candle ((Close > Open) AND ((Open - Low) >= 2 * (Close - Open)) AND ((High - Close) <= (Close - Open)))
+            red_candle_pattern = (current_close < current_open and 
+                                 (current_close - current_low) >= 2 * (current_open - current_close) and 
+                                 (current_high - current_open) <= (current_open - current_close))
+            
+            green_candle_pattern = (current_close > current_open and 
+                                   (current_open - current_low) >= 2 * (current_close - current_open) and 
+                                   (current_high - current_close) <= (current_close - current_open))
+            
+            # Buy if not in a position, the candle pattern is valid, price is above 6MA, and not selling on this candle
             if (not self.df['In_Position'].iloc[i] and 
-                self.df['Red_Candle'].iloc[i] and 
+                (red_candle_pattern or green_candle_pattern) and 
                 self.df['Close'].iloc[i] > self.df['6MA'].iloc[i] and
                 not self.df['Sell_Signal'].iloc[i]):
                 
