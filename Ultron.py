@@ -155,15 +155,15 @@ class DashPlotter:
             current_low = self.df['Low'].iloc[i]
             
             # Check for the specific candle pattern conditions:
-            # Condition 1: Red candle ((Close < Open) AND ((Close - Low) >= 2 * (Open - Close)) AND ((High - Open) <= (Open - Close)))
-            # Condition 2: Green candle ((Close > Open) AND ((Open - Low) >= 2 * (Close - Open)) AND ((High - Close) <= (Close - Open)))
+            # Condition 1: Red candle ((Close < Open) AND ((Close - Low) >= 2 * (Open - Close)) AND ((High - Open) <= 0.5 * (Close - Low)))
+            # Condition 2: Green candle ((Close > Open) AND ((Open - Low) >= 2 * (Close - Open)) AND ((High - Close) <= 0.5 * (Open - Low)))
             red_candle_pattern = (current_close < current_open and 
                                  (current_close - current_low) >= 2 * (current_open - current_close) and 
-                                 (current_high - current_open) <= (current_open - current_close))
+                                 (current_high - current_open) <= 0.5 * (current_close - current_low))
             
             green_candle_pattern = (current_close > current_open and 
                                    (current_open - current_low) >= 2 * (current_close - current_open) and 
-                                   (current_high - current_close) <= (current_close - current_open))
+                                   (current_high - current_close) <= 0.5 * (current_open - current_low))
             
             # Buy if not in a position, the candle pattern is valid, price is above 6MA, and not selling on this candle
             if (not self.df['In_Position'].iloc[i] and 
