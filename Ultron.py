@@ -167,7 +167,7 @@ class DashPlotter:
             
             # Buy if not in a position, the candle pattern is valid, price is above 6MA, and not selling on this candle
             if (not self.df['In_Position'].iloc[i] and 
-                (red_candle_pattern or green_candle_pattern) and 
+                (red_candle_pattern) and 
                 self.df['Close'].iloc[i] > self.df['6MA'].iloc[i] and
                 not self.df['Sell_Signal'].iloc[i]):
                 
