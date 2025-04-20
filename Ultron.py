@@ -661,10 +661,10 @@ def create_dash_app():
                                    'color': '#00FFFF',
                                    'border': '3px solid #00FFFF',
                                    'borderRadius': '8px',
-                                   'padding': '15px 35px',
+                                   'padding': '14px 30px',
                                    'cursor': 'pointer',
                                    'boxShadow': '0 0 15px #00FFFF',
-                                   'fontSize': '26px',
+                                   'fontSize': '24px',
                                    'fontFamily': 'monospace',
                                    'fontWeight': 'bold',
                                    'marginBottom': '30px'
@@ -850,8 +850,8 @@ def create_dash_app():
                                     style={
                                         'color': '#00FFFF',
                                         'fontFamily': 'monospace',
-                                        'fontSize': '16px',
-                                        'padding': '10px 20px',
+                                        'fontSize': '14px',
+                                        'padding': '8px 16px',
                                         'border': '1px solid #00FFFF',
                                         'borderRadius': '5px',
                                         'backgroundColor': '#000040',
