@@ -4,6 +4,7 @@ body {
     font-family: 'Courier New', monospace;
     margin: 0;
     padding: 0;
+    -webkit-text-size-adjust: 100%;
 }
 
 /* Scrollbar styling */
@@ -92,4 +93,59 @@ input:focus {
 
 #loading-message div {
     animation: blink 1.5s infinite;
+}
+
+/* Mobile responsiveness */
+@media only screen and (max-width: 768px) {
+    /* General adjustments */
+    body {
+        font-size: 14px;
+    }
+    
+    /* Table adjustments */
+    th, td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    /* Make sure content doesn't overflow */
+    .dash-graph {
+        width: 100% !important;
+        overflow-x: auto;
+    }
+    
+    /* Adjust button sizes */
+    button {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Ensure flex containers stack on mobile */
+    .mobile-stack {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    
+    /* Ensure children of stacked flex containers take full width */
+    .mobile-stack > div {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Adjust header elements */
+    h1 {
+        font-size: 28px !important;
+        letter-spacing: 2px !important;
+    }
+    
+    h4, h5 {
+        font-size: 16px !important;
+    }
+    
+    /* Adjust input fields */
+    input[type="text"] {
+        width: 120px !important;
+        font-size: 16px !important;
+    }
 }

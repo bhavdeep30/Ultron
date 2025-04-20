@@ -598,7 +598,7 @@ def create_dash_app():
         __name__,
         external_stylesheets=[dbc.themes.CYBORG],
         meta_tags=[
-            {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+            {"name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}
         ],
         suppress_callback_exceptions=True
     )
@@ -664,11 +664,12 @@ def create_dash_app():
                                'fontFamily': 'monospace',
                                'fontWeight': 'bold'
                            })
-            ], style={
+            ], className='mobile-stack', style={
                 'display': 'flex',
                 'alignItems': 'center',
                 'justifyContent': 'center',
-                'marginBottom': '60px'
+                'marginBottom': '60px',
+                'flexWrap': 'wrap'
             }),
             
             html.Div(id='loading-message', children=[
@@ -696,7 +697,10 @@ def create_dash_app():
             'position': 'absolute',
             'top': '50%',
             'left': '50%',
-            'transform': 'translate(-50%, -50%)'
+            'transform': 'translate(-50%, -50%)',
+            'width': '90%',
+            'maxHeight': '90vh',
+            'overflowY': 'auto'
         })
     ], style={
         'backgroundColor': '#000010',
@@ -880,11 +884,12 @@ def create_dash_app():
                                     'backgroundColor': '#000040',
                                     'boxShadow': '0 0 5px #00FFFF'
                                 })
-                    ], style={
+                    ], className='mobile-stack', style={
                         'display': 'flex', 
                         'alignItems': 'center', 
                         'justifyContent': 'center',
-                        'marginBottom': '20px'
+                        'marginBottom': '20px',
+                        'flexWrap': 'wrap'
                     }),
                 ], style={
                     'backgroundColor': '#000020',
@@ -905,6 +910,11 @@ def create_dash_app():
                             'borderRadius': '10px',
                             'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)',
                             'marginBottom': '20px'
+                        },
+                        config={
+                            'responsive': True,
+                            'displayModeBar': True,
+                            'scrollZoom': True
                         }
                     ),
                     
@@ -923,12 +933,12 @@ def create_dash_app():
                                         style={
                                             'width': '48%'
                                         })
-                            ], style={
+                            ], className='mobile-stack', style={
                                 'display': 'flex',
                                 'justifyContent': 'space-between',
                                 'marginBottom': '20px'
                             })
-                        ], style={
+                        ], className='mobile-stack', style={
                             'width': '48%',
                             'backgroundColor': '#000020',
                             'borderRadius': '10px',
@@ -944,7 +954,8 @@ def create_dash_app():
                                        'marginTop': '10px'  # Reduced from 20px to 15px
                                    }),
                             html.Div(id='trade-table', 
-                                    children=plotter.create_trades_table())
+                                    children=plotter.create_trades_table(),
+                                    style={'overflowX': 'auto'})
                         ], style={
                             'width': '48%',
                             'backgroundColor': '#000020',
@@ -952,7 +963,7 @@ def create_dash_app():
                             'padding': '15px',
                             'boxShadow': '0 0 10px rgba(0, 255, 255, 0.5)'
                         })
-                    ], style={
+                    ], className='mobile-stack', style={
                         'display': 'flex',
                         'justifyContent': 'space-between',
                         'marginBottom': '20px'
