@@ -342,7 +342,6 @@ class DashPlotter:
         
         # Update layout with futuristic dark theme
         fig.update_layout(
-            title=f'{self.ticker} - 5 Minute Candlestick Chart for {self.selected_date} (MST)',
             yaxis_title='Price ($)',
             height=800,
             xaxis_rangeslider_visible=False,
