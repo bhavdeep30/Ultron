@@ -1181,8 +1181,8 @@ def create_dash_app():
     return app
 
 # Run the app
-if __name__ == "__main__":
-    app = create_dash_app()
-    print("Starting Dash server for candlestick analysis...")
-    print("Open your web browser and navigate to http://127.0.0.1:8050/")
-    app.run(debug=True, use_reloader=False)
+#if __name__ == "__main__":
+    #app = create_dash_app()
+    #print("Starting Dash server for candlestick analysis...")
+    #print("Open your web browser and navigate to http://127.0.0.1:8050/")
+    #app.run_server(host="0.0.0.0", port=8080)app.run(debug=True, use_reloader=False)
