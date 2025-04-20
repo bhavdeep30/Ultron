@@ -5,3 +5,4 @@ yfinance
 numpy
 plotly
 pytz
+gunicorn
