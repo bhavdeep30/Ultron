@@ -825,7 +825,7 @@ def create_dash_app():
                                     'letterSpacing': '3px',
                                     'textShadow': '0 0 15px #00FFFF',
                                     'marginBottom': '20px',
-                                    'paddingTop': '50px', /* Increased padding to move title down */
+                                    'paddingTop': '50px',  # Increased padding to move title down
                                     'fontSize': '42px'
                                }),
                     ]),
