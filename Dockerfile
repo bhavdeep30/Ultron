@@ -17,5 +17,8 @@ EXPOSE 8080
 # Define environment variable
 ENV PORT=8080
 
-# Run app.py when the container launches
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 "Ultron:create_dash_app().server"
+# Create a small wrapper script to run the app
+RUN echo 'import Ultron\napp = Ultron.create_dash_app()\nserver = app.server' > wsgi.py
+
+# Run the app when the container launches
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 wsgi:server
