@@ -135,7 +135,7 @@ input:focus {
     
     /* Adjust header elements */
     h1 {
-        font-size: 28px !important;
+        font-size: 36px !important;
         letter-spacing: 2px !important;
     }
     
@@ -145,7 +145,23 @@ input:focus {
     
     /* Adjust input fields */
     input[type="text"] {
-        width: 120px !important;
-        font-size: 16px !important;
+        width: 180px !important;
+        font-size: 18px !important;
+    }
+    
+    /* Landing page specific adjustments */
+    #ticker-selection-container h1 {
+        font-size: 48px !important;
+        margin-bottom: 30px !important;
+    }
+    
+    #ticker-selection-container label {
+        margin-bottom: 10px !important;
+        display: block !important;
+    }
+    
+    #ticker-selection-container button {
+        margin-top: 15px !important;
+        margin-bottom: 25px !important;
     }
 }

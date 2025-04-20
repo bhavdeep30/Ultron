@@ -613,62 +613,69 @@ def create_dash_app():
                             'fontFamily': 'monospace',
                             'letterSpacing': '5px',
                             'textShadow': '0 0 20px #00FFFF',
-                            'marginBottom': '60px',
+                            'marginBottom': '40px',
                             'paddingTop': '60px',
                             'fontSize': '72px',
                             'width': '100%',
                             'display': 'flex',
-                            'justifyContent': 'center',
-                            'paddingLeft': '25px'
+                            'justifyContent': 'center'
                        }),
             ]),
-            
+                
             html.Div([
-                html.Label("ENTER TICKER SYMBOL:", 
-                          style={
-                              'color': '#00FFFF',
-                              'fontFamily': 'monospace',
-                              'fontSize': '22px',
-                              'marginRight': '20px',
-                              'textShadow': '0 0 8px #00FFFF'
-                          }),
-                dcc.Input(
-                    id='ticker-input',
-                    type='text',
-                    value='AAPL',
-                    style={
-                        'backgroundColor': '#000040',
-                        'color': '#00FFFF',
-                        'border': '3px solid #00FFFF',
-                        'borderRadius': '8px',
-                        'padding': '12px 20px',
-                        'fontSize': '22px',
-                        'width': '180px',
-                        'textAlign': 'center',
-                        'fontFamily': 'monospace',
-                        'boxShadow': '0 0 15px #00FFFF'
-                    }
-                ),
-                html.Button('TRADE', id='analyze-button', n_clicks=0,
-                           style={
-                               'backgroundColor': '#000080',
-                               'color': '#00FFFF',
-                               'border': '3px solid #00FFFF',
-                               'borderRadius': '8px',
-                               'padding': '12px 25px',
-                               'marginLeft': '20px',
-                               'cursor': 'pointer',
-                               'boxShadow': '0 0 15px #00FFFF',
-                               'fontSize': '22px',
-                               'fontFamily': 'monospace',
-                               'fontWeight': 'bold'
-                           })
+                html.Div([
+                    html.Label("ENTER TICKER SYMBOL:", 
+                              style={
+                                  'color': '#00FFFF',
+                                  'fontFamily': 'monospace',
+                                  'fontSize': '22px',
+                                  'textShadow': '0 0 8px #00FFFF',
+                                  'marginBottom': '15px',
+                                  'textAlign': 'center',
+                                  'width': '100%'
+                              }),
+                    dcc.Input(
+                        id='ticker-input',
+                        type='text',
+                        value='AAPL',
+                        style={
+                            'backgroundColor': '#000040',
+                            'color': '#00FFFF',
+                            'border': '3px solid #00FFFF',
+                            'borderRadius': '8px',
+                            'padding': '12px 20px',
+                            'fontSize': '22px',
+                            'width': '180px',
+                            'textAlign': 'center',
+                            'fontFamily': 'monospace',
+                            'boxShadow': '0 0 15px #00FFFF',
+                            'marginBottom': '25px'
+                        }
+                    ),
+                ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'width': '100%'}),
+                    
+                html.Div([
+                    html.Button('TRADE', id='analyze-button', n_clicks=0,
+                               style={
+                                   'backgroundColor': '#000080',
+                                   'color': '#00FFFF',
+                                   'border': '3px solid #00FFFF',
+                                   'borderRadius': '8px',
+                                   'padding': '12px 25px',
+                                   'cursor': 'pointer',
+                                   'boxShadow': '0 0 15px #00FFFF',
+                                   'fontSize': '22px',
+                                   'fontFamily': 'monospace',
+                                   'fontWeight': 'bold',
+                                   'marginBottom': '30px'
+                               })
+                ], style={'display': 'flex', 'justifyContent': 'center', 'width': '100%'})
             ], className='mobile-stack', style={
                 'display': 'flex',
+                'flexDirection': 'column',
                 'alignItems': 'center',
                 'justifyContent': 'center',
-                'marginBottom': '60px',
-                'flexWrap': 'wrap'
+                'width': '100%'
             }),
             
             html.Div(id='loading-message', children=[
@@ -818,77 +825,95 @@ def create_dash_app():
                                     'letterSpacing': '3px',
                                     'textShadow': '0 0 15px #00FFFF',
                                     'marginBottom': '20px',
-                                    'paddingTop': '20px',
+                                    'paddingTop': '50px', /* Increased padding to move title down */
                                     'fontSize': '42px'
                                }),
                     ]),
             
                     # Date navigation with back/next buttons and current date display
                     html.Div([
-                        html.Button('◀ PREV', id='prev-date-button', 
-                                   style={
-                                       'backgroundColor': '#000040',
-                                       'color': '#00FFFF',
-                                       'border': '1px solid #00FFFF',
-                                       'borderRadius': '5px',
-                                       'padding': '10px 15px',
-                                       'marginRight': '15px',
-                                       'cursor': 'pointer',
-                                       'boxShadow': '0 0 5px #00FFFF'
-                                   }),
-                        html.Div(id='current-date-display', 
-                                children=f"DATE: {plotter.selected_date}",
-                                style={
-                                    'color': '#00FFFF',
-                                    'fontFamily': 'monospace',
-                                    'fontSize': '18px',
-                                    'padding': '10px 20px',
-                                    'border': '1px solid #00FFFF',
-                                    'borderRadius': '5px',
-                                    'backgroundColor': '#000040',
-                                    'boxShadow': '0 0 5px #00FFFF'
-                                }),
-                        html.Button('NEXT ▶', id='next-date-button', 
-                                   style={
-                                       'backgroundColor': '#000020',  # Darker background for disabled
-                                       'color': '#336666',  # Muted color for disabled
-                                       'border': '1px solid #336666',
-                                       'borderRadius': '5px',
-                                       'padding': '10px 15px',
-                                       'marginLeft': '15px',
-                                       'cursor': 'not-allowed',  # Change cursor to indicate disabled
-                                       'opacity': '0.5'  # Reduce opacity for disabled
-                                   }),
-                        html.Button('REFRESH', id='refresh-button', n_clicks=0, 
-                                   style={
-                                       'backgroundColor': '#000040',
-                                       'color': '#00FFFF',
-                                       'border': '1px solid #00FFFF',
-                                       'borderRadius': '5px',
-                                       'padding': '10px 15px',
-                                       'marginLeft': '15px',
-                                       'cursor': 'pointer',
-                                       'boxShadow': '0 0 5px #00FFFF'
-                                   }),
-                        html.Div(id='auto-refresh-indicator',
-                                children="AUTO-REFRESH: ACTIVE",
-                                style={
-                                    'color': '#00FFFF',
-                                    'fontFamily': 'monospace',
-                                    'fontSize': '18px',
-                                    'padding': '5px 10px',
-                                    'marginLeft': '15px',
-                                    'border': '1px solid #00FFFF',
-                                    'borderRadius': '5px',
-                                    'backgroundColor': '#000040',
-                                    'boxShadow': '0 0 5px #00FFFF'
-                                })
-                    ], className='mobile-stack', style={
-                        'display': 'flex', 
-                        'alignItems': 'center', 
+                        # First row: PREV, DATE, NEXT
+                        html.Div([
+                            html.Button('◀ PREV', id='prev-date-button', 
+                                       style={
+                                           'backgroundColor': '#000040',
+                                           'color': '#00FFFF',
+                                           'border': '1px solid #00FFFF',
+                                           'borderRadius': '5px',
+                                           'padding': '10px 15px',
+                                           'marginRight': '15px',
+                                           'cursor': 'pointer',
+                                           'boxShadow': '0 0 5px #00FFFF'
+                                       }),
+                            html.Div(id='current-date-display', 
+                                    children=f"DATE: {plotter.selected_date}",
+                                    style={
+                                        'color': '#00FFFF',
+                                        'fontFamily': 'monospace',
+                                        'fontSize': '18px',
+                                        'padding': '10px 20px',
+                                        'border': '1px solid #00FFFF',
+                                        'borderRadius': '5px',
+                                        'backgroundColor': '#000040',
+                                        'boxShadow': '0 0 5px #00FFFF'
+                                    }),
+                            html.Button('NEXT ▶', id='next-date-button', 
+                                       style={
+                                           'backgroundColor': '#000020',  # Darker background for disabled
+                                           'color': '#336666',  # Muted color for disabled
+                                           'border': '1px solid #336666',
+                                           'borderRadius': '5px',
+                                           'padding': '10px 15px',
+                                           'marginLeft': '15px',
+                                           'cursor': 'not-allowed',  # Change cursor to indicate disabled
+                                           'opacity': '0.5'  # Reduce opacity for disabled
+                                       }),
+                        ], style={
+                            'display': 'flex',
+                            'alignItems': 'center',
+                            'justifyContent': 'center',
+                            'marginBottom': '15px',
+                            'width': '100%'
+                        }),
+                        
+                        # Second row: REFRESH and AUTO-REFRESH
+                        html.Div([
+                            html.Button('REFRESH', id='refresh-button', n_clicks=0, 
+                                       style={
+                                           'backgroundColor': '#000040',
+                                           'color': '#00FFFF',
+                                           'border': '1px solid #00FFFF',
+                                           'borderRadius': '5px',
+                                           'padding': '10px 15px',
+                                           'marginRight': '15px',
+                                           'cursor': 'pointer',
+                                           'boxShadow': '0 0 5px #00FFFF'
+                                       }),
+                            html.Div(id='auto-refresh-indicator',
+                                    children="AUTO-REFRESH: ACTIVE",
+                                    style={
+                                        'color': '#00FFFF',
+                                        'fontFamily': 'monospace',
+                                        'fontSize': '18px',
+                                        'padding': '5px 10px',
+                                        'border': '1px solid #00FFFF',
+                                        'borderRadius': '5px',
+                                        'backgroundColor': '#000040',
+                                        'boxShadow': '0 0 5px #00FFFF'
+                                    })
+                        ], style={
+                            'display': 'flex',
+                            'alignItems': 'center',
+                            'justifyContent': 'center',
+                            'width': '100%'
+                        })
+                    ], style={
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                        'alignItems': 'center',
                         'justifyContent': 'center',
                         'marginBottom': '20px',
-                        'flexWrap': 'wrap'
+                        'width': '100%'
                     }),
                 ], style={
                     'backgroundColor': '#000020',
