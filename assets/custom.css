@@ -167,8 +167,8 @@ input:focus {
     
     /* Make the TRADE button bigger on mobile */
     #analyze-button {
-        padding: 16px 35px !important;
-        font-size: 24px !important;
+        padding: 12px 25px !important;
+        font-size: 22px !important;
         margin-bottom: 35px !important;
     }
 }
