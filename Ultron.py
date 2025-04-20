@@ -661,10 +661,10 @@ def create_dash_app():
                                    'color': '#00FFFF',
                                    'border': '3px solid #00FFFF',
                                    'borderRadius': '8px',
-                                   'padding': '12px 25px',
+                                   'padding': '15px 35px',
                                    'cursor': 'pointer',
                                    'boxShadow': '0 0 15px #00FFFF',
-                                   'fontSize': '22px',
+                                   'fontSize': '26px',
                                    'fontFamily': 'monospace',
                                    'fontWeight': 'bold',
                                    'marginBottom': '30px'
@@ -825,7 +825,7 @@ def create_dash_app():
                                     'letterSpacing': '3px',
                                     'textShadow': '0 0 15px #00FFFF',
                                     'marginBottom': '20px',
-                                    'paddingTop': '50px',  # Increased padding to move title down
+                                    'paddingTop': '70px',  # Further increased padding to move title down
                                     'fontSize': '42px'
                                }),
                     ]),
@@ -850,7 +850,7 @@ def create_dash_app():
                                     style={
                                         'color': '#00FFFF',
                                         'fontFamily': 'monospace',
-                                        'fontSize': '18px',
+                                        'fontSize': '16px',
                                         'padding': '10px 20px',
                                         'border': '1px solid #00FFFF',
                                         'borderRadius': '5px',
@@ -894,7 +894,7 @@ def create_dash_app():
                                     style={
                                         'color': '#00FFFF',
                                         'fontFamily': 'monospace',
-                                        'fontSize': '18px',
+                                        'fontSize': '14px',
                                         'padding': '5px 10px',
                                         'border': '1px solid #00FFFF',
                                         'borderRadius': '5px',
@@ -1190,7 +1190,7 @@ def create_dash_app():
             return {
                 'color': '#00FFFF',
                 'fontFamily': 'monospace',
-                'fontSize': '18px',
+                'fontSize': '14px',
                 'padding': '5px 10px',
                 'marginLeft': '15px',
                 'border': '1px solid #00FFFF',
@@ -1203,7 +1203,7 @@ def create_dash_app():
             return {
                 'color': '#00FFFF',
                 'fontFamily': 'monospace',
-                'fontSize': '18px',
+                'fontSize': '14px',
                 'padding': '5px 10px',
                 'marginLeft': '15px',
                 'border': '1px solid #00FFFF',
