@@ -1,0 +1,3 @@
+gcloud builds submit --tag gcr.io/ultron-bhavdeep/dash-Ultron
+
+gcloud run deploy dash-ultron --image gcr.io/ultron-bhavdeep/dash-ultron --region us-central1 --platform managed --allow-unauthenticated --project=ultron-bhavdeep
